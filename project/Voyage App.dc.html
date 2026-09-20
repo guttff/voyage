@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/industry-d1c71706-86b9-45c7-a68a-786ae3b59f32/styles.css">
+  <script src="_ds/industry-d1c71706-86b9-45c7-a68a-786ae3b59f32/_ds_bundle.js"></script>
+  <script src="./image-slot.js"></script>
+  <style>
+    body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)}
+    a{color:var(--color-accent)} a:hover{color:var(--color-accent-700)}
+    .vy-row:hover{background:color-mix(in srgb,var(--color-text) 4%,transparent)}
+    .vy-row:hover .vy-act{opacity:1}
+    .vy-act{opacity:0;transition:opacity .12s}
+    .vy-nav:hover{background:var(--color-accent-800)}
+    .vy-tripcard:hover{box-shadow:var(--shadow-md)}
+    .vy-av image-slot{display:block;width:100%;height:100%;opacity:0}
+    .vy-av image-slot[data-filled]{opacity:1}
+    button{cursor:pointer}
+  </style>
+</helmet>
+<div style="position:relative;min-height:100vh;display:grid;grid-template-columns:220px minmax(0,1fr);font-size:14px">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside style="background:var(--color-accent-900);color:var(--color-bg);display:flex;flex-direction:column;padding:var(--space-4) var(--space-3);gap:var(--space-4);position:sticky;top:0;height:100vh">
+    <div style="display:flex;align-items:center;gap:10px;padding:0 4px">
+      <div class="blueprint" style="width:34px;height:34px;display:grid;place-items:center;border-color:var(--color-accent-500)"><i class="corner tl" style="color:var(--color-accent-400)"></i><i class="corner tr" style="color:var(--color-accent-400)"></i><i class="corner bl" style="color:var(--color-accent-400)"></i><i class="corner br" style="color:var(--color-accent-400)"></i>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m16.2 7.8-2 6.3-6.4 2.1 2-6.3z"></path></svg>
+      </div>
+      <div><div style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1;letter-spacing:.03em">Voyage</div><div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-300)">Plan · Travel · Together</div></div>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+        <button type="button" class="vy-nav" onClick="{{ n.go }}" style="display:flex;align-items:center;gap:10px;font:inherit;font-size:14px;color:inherit;text-align:left;padding:9px 10px;border:0;background:{{ n.bg }};border-left:2px solid {{ n.line }}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.icon }}"></path></svg>{{ n.label }}
+        </button>
+      </sc-for>
+    </nav>
+    <div style="flex:1"></div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-300);padding:0 4px">Planning as</div>
+      <sc-for list="{{ people }}" as="p" hint-placeholder-count="2">
+        <button type="button" class="vy-nav" onClick="{{ p.select }}" style="display:flex;align-items:center;gap:10px;font:inherit;color:inherit;text-align:left;padding:6px 8px;border:0;background:{{ p.bg }}">
+          <div style="position:relative;width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;background:var(--color-accent-600);display:grid;place-items:center;font-family:var(--font-heading);font-weight:600;font-size:14px;color:var(--color-bg)"><span>{{ p.initial }}</span><div style="position:absolute;inset:0;pointer-events:none" class="vy-av"><image-slot id="avatar-{{ p.id }}" shape="circle" placeholder=""></image-slot></div></div>
+          <div style="min-width:0"><div style="font-weight:700;font-size:13px;line-height:1.2">{{ p.name }}</div><div style="font-size:11px;color:var(--color-accent-300)">{{ p.role }}</div></div>
+          <sc-if value="{{ p.active }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <div style="font-size:12px;color:var(--color-accent-300);font-style:italic;padding:0 4px">“Better trips, together.”</div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main style="padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6);min-width:0">
+
+    <!-- HOME -->
+    <sc-if value="{{ pageHome }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-4)">
+        <div><h2 style="margin:0">{{ greeting }}</h2><div class="text-muted">{{ homeSub }}</div></div>
+        <button type="button" class="btn btn-primary blueprint" onClick="{{ openNewVac }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>+ New trip</button>
+      </div>
+      <sc-if value="{{ hasNext }}" hint-placeholder-val="{{ true }}">
+        <div class="blueprint" style="position:relative;height:300px;background:var(--color-accent-800)">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="{{ duoClass }}" style="position:absolute;inset:0"><image-slot id="cover-{{ nextVac.id }}" shape="rect" placeholder="Drop a photo of {{ nextVac.name }}"></image-slot></div>
+          <div style="position:absolute;inset:0;background:linear-gradient(to top, color-mix(in srgb,var(--color-accent-900) 85%,transparent) 0%, transparent 60%);pointer-events:none"></div>
+          <div style="position:absolute;left:var(--space-6);right:var(--space-6);bottom:var(--space-6);color:var(--color-bg);display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-4);pointer-events:none">
+            <div><div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-200)">Next trip · in {{ nextVac.daysUntil }} days</div><div style="font-family:var(--font-heading);font-weight:600;font-size:44px;line-height:1">{{ nextVac.name }}</div><div style="font-size:13px;margin-top:4px">{{ nextVac.range }} · {{ nextVac.days }} days · {{ nextVac.cost }} planned</div></div>
+            <button type="button" class="btn btn-primary blueprint" onClick="{{ nextVac.open }}" style="pointer-events:auto"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Open trip</button>
+          </div>
+        </div>
+      </sc-if>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-4)">
+        <div class="card blueprint" style="align-items:center;text-align:center;gap:var(--space-3)"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-kicker" style="align-self:flex-start">Travel fund</div>
+          <div style="position:relative;width:120px;height:120px">
+            <svg viewBox="0 0 120 120" style="width:120px;height:120px;transform:rotate(-90deg)"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--color-accent-200)" stroke-width="10"></circle><circle cx="60" cy="60" r="52" fill="none" stroke="var(--color-accent)" stroke-width="10" stroke-dasharray="{{ ring.dash }}" stroke-linecap="butt"></circle></svg>
+            <div style="position:absolute;inset:0;display:grid;place-items:center"><div><div style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1">{{ ring.pct }}</div><div class="text-muted" style="font-size:11px">of next trip</div></div></div>
+          </div>
+          <div><div style="font-family:var(--font-heading);font-weight:600;font-size:22px;line-height:1">{{ budgetSummary.saved }}</div><div class="text-muted" style="font-size:12px">saved · {{ ring.target }} needed by {{ nextVac.startShort }}</div></div>
+        </div>
+        <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-kicker">Contribution plan</div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1">{{ budgetSummary.couple }}</div>
+          <div class="card-body">every 2 weeks · {{ budgetSummary.split }}</div>
+          <div class="card-meta">Next payday {{ budgetSummary.nextPay }}</div>
+          <button type="button" class="btn btn-ghost" onClick="{{ goBudget }}" style="align-self:flex-start">Manage</button>
+        </div>
+        <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-kicker">Budget check</div>
+          <sc-for list="{{ vacs }}" as="v" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;padding:4px 0;border-bottom:1px solid color-mix(in srgb,var(--color-text) 8%,transparent)"><span style="font-weight:700">{{ v.name }}</span><span class="text-muted" style="font-size:11px;margin-right:auto">{{ v.startShort }}</span><span class="tag {{ v.tagClass }}" style="font-size:10px;padding:1px 7px">{{ v.verdictShort }}</span></div>
+          </sc-for>
+          <div class="card-meta">{{ activityLatest }}</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- TRIPS -->
+    <sc-if value="{{ pageTrips }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-4)">
+        <div><h2 style="margin:0">My trips</h2><div class="text-muted">Plan, compare and build each trip together.</div></div>
+        <button type="button" class="btn btn-primary blueprint" onClick="{{ openNewVac }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>+ New trip</button>
+      </div>
+      <input class="input" placeholder="Search destinations…" value="{{ search }}" onChange="{{ fSearch }}" style="max-width:360px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--space-4)">
+        <sc-for list="{{ vacsFiltered }}" as="v" hint-placeholder-count="3">
+          <div class="blueprint vy-tripcard" style="display:flex;flex-direction:column;background:transparent"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div class="{{ duoClass }}" style="height:150px;background:var(--color-accent-100)"><image-slot id="cover-{{ v.id }}" shape="rect" placeholder="Drop a photo of {{ v.name }}"></image-slot></div>
+            <div style="padding:var(--space-3);display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:var(--font-heading);font-weight:600;font-size:22px;line-height:1">{{ v.name }}</span><span style="font-weight:700">{{ v.cost }}</span></div>
+              <div class="text-muted" style="font-size:12px">{{ v.range }} · {{ v.days }} days · {{ v.optCount }} plans</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="tag {{ v.tagClass }}">{{ v.verdict }}</span><button type="button" class="btn btn-secondary" onClick="{{ v.open }}">Open</button></div>
+            </div>
+          </div>
+        </sc-for>
+        <button type="button" onClick="{{ openNewVac }}" class="blueprint" style="min-height:240px;display:grid;place-items:center;font:inherit;color:var(--color-accent-700);background:transparent;border-style:dashed"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div style="text-align:center"><div style="font-size:30px;line-height:1">+</div><div style="font-weight:700">Create new trip</div><div class="text-muted" style="font-size:12px">or import one from JSON</div></div></button>
+      </div>
+    </sc-if>
+
+    <!-- TRIP DETAIL -->
+    <sc-if value="{{ pageTrip }}" hint-placeholder-val="{{ false }}">
+      <button type="button" class="btn btn-ghost" onClick="{{ goTrips }}" style="align-self:flex-start;margin:-10px 0 -14px -6px">‹ Back to trips</button>
+      <div class="blueprint" style="position:relative;height:240px;background:var(--color-accent-800)">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="{{ duoClass }}" style="position:absolute;inset:0"><image-slot id="cover-{{ activeVac.id }}" shape="rect" placeholder="Drop a photo of {{ activeVac.name }}"></image-slot></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top, color-mix(in srgb,var(--color-accent-900) 85%,transparent) 0%, transparent 60%);pointer-events:none"></div>
+        <div style="position:absolute;left:var(--space-6);right:var(--space-6);bottom:var(--space-4);color:var(--color-bg);display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-4);pointer-events:none">
+          <div><div style="font-family:var(--font-heading);font-weight:600;font-size:40px;line-height:1">{{ activeVac.name }}</div><div style="font-size:13px;margin-top:4px">{{ activeVac.range }} · {{ activeVac.days }} days</div></div>
+          <div style="display:flex;gap:var(--space-2);pointer-events:auto"><span class="tag {{ activeVac.tagClass }}" style="background:var(--color-bg)">{{ activeVac.verdict }}</span><button type="button" class="btn btn-secondary" onClick="{{ removeVac }}" style="color:var(--color-bg);border-color:var(--color-accent-400)">Delete</button></div>
+        </div>
+      </div>
+      <div style="display:flex;border-bottom:1px solid var(--color-divider);gap:2px;overflow-x:auto">
+        <sc-for list="{{ tripTabs }}" as="t" hint-placeholder-count="5">
+          <button type="button" onClick="{{ t.go }}" style="flex:none;font:inherit;background:none;border:0;border-bottom:2px solid {{ t.line }};padding:8px 14px;color:{{ t.color }};font-family:var(--font-heading);font-weight:600;font-size:16px">{{ t.label }}</button>
+        </sc-for>
+      </div>
+
+      <!-- Plans -->
+      <sc-if value="{{ tabPlans }}" hint-placeholder-val="{{ true }}">
+        <div><h4 style="margin:0">Plan options</h4><div class="text-muted" style="font-size:13px">Each of you builds your own plan. Copy the best parts into Final.</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:var(--space-4)">
+          <sc-for list="{{ planCards }}" as="c" hint-placeholder-count="3">
+            <div class="card blueprint" style="background:{{ c.bg }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="display:flex;align-items:center;gap:10px">
+                <sc-if value="{{ c.hasAvatar }}" hint-placeholder-val="{{ true }}"><div style="position:relative;width:36px;height:36px;flex:none;border-radius:50%;overflow:hidden;background:var(--color-accent-600);display:grid;place-items:center;font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-bg)"><span>{{ c.initial }}</span><div style="position:absolute;inset:0;pointer-events:none" class="vy-av"><image-slot id="avatar-{{ c.personId }}" shape="circle" placeholder=""></image-slot></div></div></sc-if>
+                <sc-if value="{{ c.isFinal }}" hint-placeholder-val="{{ false }}"><div style="width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--color-accent);color:var(--color-accent-700)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 1 0 0-8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg></div></sc-if>
+                <div><div style="font-weight:700">{{ c.title }}</div><div class="text-muted" style="font-size:12px">{{ c.sub }}</div></div>
+              </div>
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1">{{ c.total }}</div>
+              <div class="card-body">{{ c.count }} items · {{ c.perPerson }} each</div>
+              <div style="display:flex;gap:6px"><button type="button" class="btn btn-secondary" onClick="{{ c.open }}">View plan</button><sc-if value="{{ c.canDelete }}" hint-placeholder-val="{{ false }}"><button type="button" class="btn btn-ghost" onClick="{{ c.remove }}" style="color:var(--color-neutral-700)">Delete</button></sc-if></div>
+            </div>
+          </sc-for>
+          <button type="button" onClick="{{ addOption }}" class="blueprint" style="min-height:180px;display:grid;place-items:center;font:inherit;color:var(--color-accent-700);background:transparent;border-style:dashed"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div style="text-align:center"><div style="font-size:30px;line-height:1">+</div><div style="font-weight:700">Create new option</div><div class="text-muted" style="font-size:12px">blank, or import JSON</div></div></button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4)">
+          <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div class="card-kicker">Budget check</div>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px">
+              <span class="text-muted">Saved by {{ activeVac.startShort }}</span><span style="font-weight:700;text-align:right">{{ activeVac.balanceBefore }}</span>
+              <span class="text-muted">Trip cost ({{ activeVac.costSrc }})</span><span style="font-weight:700;text-align:right">−{{ activeVac.cost }}</span>
+              <span style="border-top:1px solid var(--color-divider);padding-top:4px">Left after trip</span><span style="border-top:1px solid var(--color-divider);padding-top:4px;font-weight:700;text-align:right">{{ activeVac.balanceAfter }}</span>
+            </div>
+          </div>
+          <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div class="card-kicker">Recent activity</div>
+            <sc-for list="{{ activity }}" as="a" hint-placeholder-count="3"><div style="display:flex;gap:8px;font-size:13px;align-items:baseline"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent);flex:none;transform:translateY(-2px)"></span><span style="flex:1">{{ a.text }}</span><span class="text-muted" style="font-size:11px;flex:none">{{ a.when }}</span></div></sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Itinerary -->
+      <sc-if value="{{ tabItinerary }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:var(--space-4);align-items:start">
+          <div class="blueprint" style="display:flex;flex-direction:column">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="display:flex;border-bottom:1px solid var(--color-divider);overflow-x:auto">
+              <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+                <button type="button" onClick="{{ t.onSelect }}" style="font:inherit;background:{{ t.bg }};border:0;border-right:1px solid var(--color-divider);border-bottom:2px solid {{ t.line }};padding:10px 16px;color:{{ t.color }};display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:110px">
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:16px;line-height:1">{{ t.name }}</span>
+                  <span style="font-size:11px;opacity:.75">{{ t.sub }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) var(--space-4) 0;gap:var(--space-3)">
+              <div class="text-muted" style="font-size:12px">{{ activeOpt.hint }}</div>
+              <div style="display:flex;gap:6px;flex:none"><button type="button" class="btn btn-secondary" onClick="{{ goIo }}">Export</button><button type="button" class="btn btn-primary blueprint" onClick="{{ openAdd }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>+ Add item</button></div>
+            </div>
+            <div style="padding:var(--space-3) var(--space-4) var(--space-4);display:flex;flex-direction:column">
+              <sc-for list="{{ days }}" as="d" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:32px minmax(0,1fr);gap:var(--space-3);position:relative;padding-bottom:var(--space-3)">
+                  <div style="position:absolute;left:15px;top:30px;bottom:0;width:1px;background:var(--color-text)"></div>
+                  <div style="width:30px;height:30px;border:1px solid var(--color-text);border-radius:50%;display:grid;place-items:center;font-size:12px;font-family:var(--font-heading);font-weight:600;background:var(--color-bg);position:relative">{{ d.n }}</div>
+                  <div>
+                    <div style="display:flex;align-items:baseline;gap:var(--space-2);height:30px"><span style="font-weight:700;font-size:13px">{{ d.label }}</span><span class="text-muted" style="font-size:12px">{{ d.total }}</span><button type="button" class="btn btn-ghost" onClick="{{ d.onAdd }}" style="font-size:12px;padding:0 6px;margin-left:auto">+ Add to this day</button></div>
+                    <sc-for list="{{ d.items }}" as="it" hint-placeholder-count="1">
+                      <div class="vy-row" style="display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:start;padding:7px 6px;border-top:1px solid color-mix(in srgb,var(--color-text) 8%,transparent)">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px"><path d="{{ it.icon }}"></path></svg>
+                        <div style="min-width:0">
+                          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-weight:700;font-size:13px">{{ it.title }}</span><span class="text-muted" style="font-size:11px">{{ it.time }}</span></div>
+                          <div class="text-muted" style="font-size:12px">{{ it.note }}</div>
+                          <div style="display:flex;gap:6px;margin-top:3px;align-items:center"><span style="width:16px;height:16px;border-radius:50%;background:var(--color-accent-800);color:var(--color-bg);font-size:9px;font-weight:700;display:grid;place-items:center">{{ it.by }}</span><span class="text-muted" style="font-size:11px">{{ it.provenance }}</span></div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+                          <span style="font-weight:700;font-size:13px">{{ it.cost }}</span>
+                          <div class="vy-act" style="display:flex;gap:2px"><button type="button" class="btn btn-ghost" onClick="{{ it.onCopy }}" style="font-size:11px;padding:0 5px">Copy to…</button><button type="button" class="btn btn-ghost" onClick="{{ it.onEdit }}" style="font-size:11px;padding:0 5px">Edit</button><button type="button" class="btn btn-ghost" onClick="{{ it.onRemove }}" style="font-size:11px;padding:0 5px;color:var(--color-neutral-700)">Remove</button></div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+              <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div class="card-kicker">Cost · {{ activeOpt.name }}</div><div style="font-family:var(--font-heading);font-size:30px;font-weight:600;line-height:1">{{ activeOpt.total }}</div><div class="card-meta">{{ activeOpt.perPerson }} each</div></div>
+              <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div class="card-kicker">Days</div><div style="font-family:var(--font-heading);font-size:30px;font-weight:600;line-height:1">{{ activeVac.days }}</div><div class="card-meta">{{ activeOpt.perDay }} / day</div></div>
+            </div>
+            <div class="blueprint" style="display:grid;grid-template-columns:repeat(5,1fr)">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <sc-for list="{{ breakdown }}" as="b" hint-placeholder-count="5">
+                <div style="padding:10px 6px;border-right:1px solid var(--color-divider);display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ b.icon }}"></path></svg>
+                  <span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-700)">{{ b.label }}</span>
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:15px">{{ b.total }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div class="card-kicker">Budget check</div>
+              <div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px">
+                <span class="text-muted">Saved by {{ activeVac.startShort }}</span><span style="font-weight:700;text-align:right">{{ activeVac.balanceBefore }}</span>
+                <span class="text-muted">Trip cost ({{ activeVac.costSrc }})</span><span style="font-weight:700;text-align:right">−{{ activeVac.cost }}</span>
+                <span style="border-top:1px solid var(--color-divider);padding-top:4px">Left after trip</span><span style="border-top:1px solid var(--color-divider);padding-top:4px;font-weight:700;text-align:right">{{ activeVac.balanceAfter }}</span>
+              </div>
+              <span class="tag {{ activeVac.tagClass }}" style="align-self:flex-start">{{ activeVac.verdict }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Compare -->
+      <sc-if value="{{ tabCompare }}" hint-placeholder-val="{{ false }}">
+        <div class="text-muted" style="font-size:13px">Options side by side, aligned by day. Hover an item to send it to Final.</div>
+        <div class="blueprint" style="overflow-x:auto">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div style="display:grid;grid-template-columns:120px {{ cmpCols }};min-width:700px">
+            <div style="padding:10px 12px;border-bottom:1px solid var(--color-divider);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-700);align-self:end">Day</div>
+            <sc-for list="{{ cmpHeads }}" as="c" hint-placeholder-count="3">
+              <div style="padding:10px 12px;border-bottom:1px solid var(--color-divider);border-left:1px solid var(--color-divider);background:{{ c.bg }};display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+                <div><div style="font-family:var(--font-heading);font-weight:600;font-size:18px;line-height:1">{{ c.name }}</div><div class="text-muted" style="font-size:11px">{{ c.sub }}</div></div>
+                <div style="font-weight:700">{{ c.total }}</div>
+              </div>
+            </sc-for>
+            <sc-for list="{{ cmpRows }}" as="r" hint-placeholder-count="3">
+              <div style="padding:10px 12px;border-bottom:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);display:flex;flex-direction:column"><span style="font-family:var(--font-heading);font-weight:600;font-size:15px">Day {{ r.n }}</span><span class="text-muted" style="font-size:11px">{{ r.label }}</span></div>
+              <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="3">
+                <div style="padding:6px 8px;border-left:1px solid var(--color-divider);border-bottom:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);background:{{ c.bg }};display:flex;flex-direction:column;gap:4px">
+                  <sc-for list="{{ c.items }}" as="it" hint-placeholder-count="1">
+                    <div class="vy-row" style="display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:6px;align-items:center;padding:4px;border:1px solid var(--color-divider);font-size:12px">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ it.icon }}"></path></svg>
+                      <span style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ it.title }}">{{ it.title }}</span>
+                      <span style="display:flex;align-items:center;gap:4px"><span>{{ it.cost }}</span>
+                        <sc-if value="{{ it.canFinal }}" hint-placeholder-val="{{ false }}"><button type="button" class="btn btn-ghost vy-act" onClick="{{ it.onToFinal }}" style="padding:0 4px;font-size:11px">→ Final</button></sc-if>
+                        <sc-if value="{{ it.inFinal }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="padding:0 5px;font-size:10px">in Final</span></sc-if>
+                      </span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Import / Export -->
+      <sc-if value="{{ tabIo }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--space-4);align-items:start">
+          <div class="card blueprint" style="gap:var(--space-3)"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="display:flex;align-items:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg><div><div class="card-title">Import JSON</div><div class="text-muted" style="font-size:12px">A file or pasted text. From ChatGPT or an earlier export.</div></div></div>
+            <label class="blueprint" style="display:grid;place-items:center;padding:var(--space-4);border-style:dashed;cursor:pointer;text-align:center;font-size:13px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><input type="file" accept=".json,application/json" onChange="{{ fImportFile }}" style="display:none"><span><span style="font-weight:700;color:var(--color-accent-700)">Choose a .json file</span><br><span class="text-muted">{{ importFileName }}</span></span></label>
+            <textarea class="input" rows="6" placeholder='…or paste: {"name":"Option 3","author":"ChatGPT","items":[{"day":1,"category":"flight","title":"…","cost":800}]}' value="{{ importText }}" onChange="{{ fImport }}" style="font-family:ui-monospace,Menlo,monospace;font-size:12px"></textarea>
+            <div style="font-size:13px;color:{{ importResult.color }}">{{ importResult.msg }}</div>
+            <div class="field"><label>Import as</label><div style="display:flex;flex-direction:column;gap:4px"><sc-for list="{{ importModes }}" as="m" hint-placeholder-count="3"><label class="radio"><input type="radio" name="impmode" checked="{{ m.checked }}" onChange="{{ m.onSelect }}"><span class="dot"></span>{{ m.label }}</label></sc-for></div></div>
+            <button type="button" class="btn btn-primary blueprint" onClick="{{ submitImport }}" disabled="{{ importResult.disabled }}" style="align-self:flex-start"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Import {{ importResult.count }} items</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+            <div class="card blueprint" style="gap:var(--space-3)"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="display:flex;align-items:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg><div><div class="card-title">Export JSON</div><div class="text-muted" style="font-size:12px">Same schema the importer reads, so a round trip through ChatGPT comes back as a new option.</div></div></div>
+              <div class="field"><label>Which plan</label><select class="input" value="{{ exportOptId }}" onChange="{{ fExportOpt }}"><sc-for list="{{ exportChoices }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
+              <textarea class="input" readOnly rows="8" value="{{ exportText }}" style="font-family:ui-monospace,Menlo,monospace;font-size:11px"></textarea>
+              <div style="display:flex;gap:6px"><a class="btn btn-primary blueprint" href="{{ exportHref }}" download="{{ exportFile }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Download .json</a><button type="button" class="btn btn-secondary" onClick="{{ copyExport }}">{{ copyExportLabel }}</button></div>
+            </div>
+            <div class="card blueprint" style="gap:var(--space-2);background:var(--color-accent-100)"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div class="card-title">Use ChatGPT to draft a plan</div>
+              <div class="text-muted" style="font-size:12px">Copy this prompt, paste the reply on the left. Day 1 = {{ activeVac.startShort }}.</div>
+              <textarea class="input" readOnly rows="4" value="{{ promptText }}" style="font-size:11px;font-family:ui-monospace,Menlo,monospace;background:var(--color-bg)"></textarea>
+              <button type="button" class="btn btn-secondary" onClick="{{ copyPrompt }}" style="align-self:flex-start">{{ copyPromptLabel }}</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </sc-if>
+
+    <!-- BUDGET -->
+    <sc-if value="{{ pageBudget }}" hint-placeholder-val="{{ false }}">
+      <div><h2 style="margin:0">Budget &amp; contributions</h2><div class="text-muted">Paid every 2 weeks, split between the two of you. Add a rule with a future date to see a change before it happens.</div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-4)">
+        <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div class="card-kicker">Saved so far</div><input class="input" type="number" value="{{ budget.saved }}" onChange="{{ fSaved }}" style="font-family:var(--font-heading);font-weight:600;font-size:26px;background:transparent"><div class="card-meta">Edit to match your real account balance.</div></div>
+        <sc-for list="{{ contribCards }}" as="c" hint-placeholder-count="2">
+          <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div class="card-kicker">{{ c.name }} · every 2 weeks</div><div style="display:flex;align-items:center;gap:8px"><button type="button" class="btn btn-secondary btn-icon" onClick="{{ c.dec }}">−</button><input class="input" type="number" step="10" value="{{ c.amount }}" onChange="{{ c.set }}" style="font-family:var(--font-heading);font-weight:600;font-size:26px;text-align:center;background:transparent"><button type="button" class="btn btn-secondary btn-icon" onClick="{{ c.inc }}">+</button></div><div class="card-meta">Current rule, from {{ c.from }}</div></div>
+        </sc-for>
+        <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div class="card-kicker">Together</div><div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1">{{ budgetSummary.couple }}</div><div class="card-body">≈ {{ budgetSummary.month }} / month</div><div class="card-meta">Next payday {{ budgetSummary.nextPay }}</div></div>
+      </div>
+      <div class="blueprint" style="padding:var(--space-3) var(--space-4) var(--space-2)">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--space-3)"><h6 style="margin:0;color:var(--color-accent-700)">12‑month projection</h6><span class="text-muted" style="font-size:12px">Month-end balance. Trips charged in their start month at the Final cost (or the largest option while Final is empty).</span></div>
+        <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;height:190px;border-bottom:1px solid var(--color-text);overflow:visible">
+          <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;text-align:center">
+              <sc-if value="{{ m.hasTrip }}" hint-placeholder-val="{{ false }}">
+                <div style="background:var(--color-accent-900);color:var(--color-bg);padding:3px 6px;font-size:10px;line-height:1.25;white-space:nowrap;position:relative;z-index:1"><div style="color:var(--color-accent-200)">{{ m.tripName }}</div><div style="font-weight:700;font-size:11px">{{ m.tripCost }}</div></div>
+                <div style="flex:1;width:0;border-left:1px dashed var(--color-accent-700);min-height:6px"></div>
+              </sc-if>
+              <div style="font-size:12px;font-weight:700;line-height:1.2;margin-bottom:3px">{{ m.balance }}</div>
+              <div style="width:70%;height:{{ m.hpx }};background:{{ m.fill }};border:1px solid var(--color-accent-700)"></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin-top:4px">
+          <sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><div style="text-align:center;font-size:11px;color:var(--color-neutral-700)">{{ m.label }}</div></sc-for>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--space-4);align-items:start">
+        <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-kicker">Contribution rules</div>
+          <table class="table"><thead><tr><th>From</th><th>{{ p1Name }}</th><th>{{ p2Name }}</th><th>Per month</th><th></th></tr></thead><tbody>
+            <sc-for list="{{ rules }}" as="r" hint-placeholder-count="1"><tr><td>{{ r.from }}</td><td>{{ r.p1 }}</td><td>{{ r.p2 }}</td><td>≈ {{ r.month }}</td><td style="text-align:right"><button type="button" class="btn btn-ghost" onClick="{{ r.onRemove }}" disabled="{{ r.locked }}" style="font-size:12px">Remove</button></td></tr></sc-for>
+          </tbody></table>
+        </div>
+        <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-kicker">Plan a future change</div>
+          <div class="card-body">“From March we each put in $600.” The projection updates immediately; nothing changes until that date.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-2)">
+            <div class="field"><label>From</label><input class="input" type="date" value="{{ rule.from }}" onChange="{{ fRuleFrom }}"></div>
+            <div class="field"><label>{{ p1Name }}</label><input class="input" type="number" value="{{ rule.p1 }}" onChange="{{ fRuleP1 }}"></div>
+            <div class="field"><label>{{ p2Name }}</label><input class="input" type="number" value="{{ rule.p2 }}" onChange="{{ fRuleP2 }}"></div>
+          </div>
+          <button type="button" class="btn btn-primary blueprint" onClick="{{ addRule }}" style="align-self:flex-start"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Add rule</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- SETTINGS -->
+    <sc-if value="{{ pageSettings }}" hint-placeholder-val="{{ false }}">
+      <div><h2 style="margin:0">Settings</h2><div class="text-muted">Names, photos and your data. Everything is saved in this browser.</div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4);align-items:start">
+        <sc-for list="{{ people }}" as="p" hint-placeholder-count="2">
+          <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div class="card-kicker">Traveler {{ p.n }}</div>
+            <div style="display:flex;gap:var(--space-3);align-items:center"><image-slot id="avatar-{{ p.id }}" shape="circle" style="width:130px;height:130px;flex:none" placeholder="Drop a photo"></image-slot><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="field"><label>Name</label><input class="input" value="{{ p.name }}" onChange="{{ p.setName }}"></div><div class="field"><label>Role</label><input class="input" value="{{ p.role }}" onChange="{{ p.setRole }}"></div></div></div>
+            <div class="card-meta">Drop a photo on the circle; it shows in the sidebar and on plan cards.</div>
+          </div>
+        </sc-for>
+        <div class="card blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-kicker">Photos</div>
+          <label class="radio"><input type="checkbox" checked="{{ duotoneOn }}" onChange="{{ toggleDuotone }}" style="position:absolute;opacity:0;width:0;height:0"><span class="dot" style="border-radius:0;background:{{ duoDotBg }}"></span>Tint trip photos in steel blue (the blueprint look)</label>
+          <div class="card-kicker" style="margin-top:var(--space-3)">Data</div>
+          <div class="card-body">Full backup of every trip, option and budget rule. Restore it on another device via Import.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn btn-secondary" href="{{ backupHref }}" download="voyage-backup.json">Download backup</a><label class="btn btn-secondary" style="cursor:pointer">Restore backup<input type="file" accept=".json" onChange="{{ fRestore }}" style="display:none"></label><button type="button" class="btn btn-ghost" onClick="{{ resetAll }}" style="color:var(--color-neutral-700)">Reset to sample data</button></div>
+          <div style="font-size:12px;color:var(--color-accent-700)">{{ settingsMsg }}</div>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- ══ DIALOGS ══ -->
+  <sc-if value="{{ hasPanel }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;display:grid;place-items:center;padding:var(--space-4);background:color-mix(in srgb,var(--color-neutral-900) 50%,transparent);z-index:10" onClick="{{ closePanelBackdrop }}">
+      <div class="dialog blueprint" style="background:var(--color-bg);width:min(560px,100%);max-height:90vh;overflow:auto" onClick="{{ stop }}">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <sc-if value="{{ panelAdd }}" hint-placeholder-val="{{ false }}">
+          <div class="dialog-title">{{ addTitle }}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+            <div class="field"><label>Day</label><select class="input" value="{{ form.date }}" onChange="{{ fDate }}"><sc-for list="{{ dayOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
+            <div class="field"><label>Time (optional)</label><input class="input" type="time" value="{{ form.time }}" onChange="{{ fTime }}"></div>
+            <div class="field" style="grid-column:1/-1"><label>Category</label><div class="seg" style="display:flex"><sc-for list="{{ catOptions }}" as="c" hint-placeholder-count="5"><button type="button" onClick="{{ c.onSelect }}" class="seg-opt" style="flex:1;justify-content:center;border:0;border-left:1px solid var(--color-divider);font:inherit;font-size:13px;background:{{ c.bg }};color:{{ c.fg }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.icon }}"></path></svg>{{ c.label }}</button></sc-for></div></div>
+            <div class="field" style="grid-column:1/-1"><label>Title</label><input class="input" placeholder="Flight FLL → Liberia" value="{{ form.title }}" onChange="{{ fTitle }}"></div>
+            <div class="field"><label>Note</label><input class="input" placeholder="Confirmation, address…" value="{{ form.note }}" onChange="{{ fNote }}"></div>
+            <div class="field"><label>Cost (total, USD)</label><input class="input" type="number" step="0.01" placeholder="0.00" value="{{ form.cost }}" onChange="{{ fCost }}"></div>
+          </div>
+          <div class="dialog-actions"><span class="text-muted" style="margin-right:auto;font-size:12px;align-self:center">As {{ currentUser }} · {{ activeOpt.name }}</span><button type="button" class="btn btn-secondary" onClick="{{ closePanel }}">Cancel</button><button type="button" class="btn btn-primary blueprint" onClick="{{ submitAdd }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>{{ addSubmit }}</button></div>
+        </sc-if>
+        <sc-if value="{{ panelCopy }}" hint-placeholder-val="{{ false }}">
+          <div class="dialog-title">Copy “{{ copyItem.title }}”</div>
+          <div class="dialog-body">{{ copyItem.cost }} · {{ copyItem.dateLabel }}. The copy keeps who added it and where it came from.</div>
+          <div style="display:flex;flex-direction:column;gap:var(--space-2)"><sc-for list="{{ copyTargets }}" as="t" hint-placeholder-count="2"><button type="button" class="btn btn-secondary" onClick="{{ t.onCopy }}" disabled="{{ t.exists }}" style="justify-content:space-between;padding:10px 12px"><span style="font-size:15px">{{ t.name }}</span><span style="font-size:12px;opacity:.7">{{ t.sub }}</span></button></sc-for></div>
+          <div class="dialog-actions"><button type="button" class="btn btn-secondary" onClick="{{ closePanel }}">Done</button></div>
+        </sc-if>
+        <sc-if value="{{ panelNewVac }}" hint-placeholder-val="{{ false }}">
+          <div class="dialog-title">New trip</div>
+          <div class="dialog-body">Creates a Final plan plus one option for each of you. You can add a photo on the trip page.</div>
+          <div class="field"><label>Destination</label><input class="input" placeholder="Costa Rica" value="{{ nv.name }}" onChange="{{ fNvName }}"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)"><div class="field"><label>Start</label><input class="input" type="date" value="{{ nv.start }}" onChange="{{ fNvStart }}"></div><div class="field"><label>End</label><input class="input" type="date" value="{{ nv.end }}" onChange="{{ fNvEnd }}"></div></div>
+          <div class="dialog-actions"><button type="button" class="btn btn-secondary" onClick="{{ closePanel }}">Cancel</button><button type="button" class="btn btn-primary blueprint" onClick="{{ submitNewVac }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Create trip</button></div>
+        </sc-if>
+        <sc-if value="{{ panelConfirm }}" hint-placeholder-val="{{ false }}">
+          <div class="dialog-title">{{ confirm.title }}</div>
+          <div class="dialog-body">{{ confirm.body }}</div>
+          <div class="dialog-actions"><button type="button" class="btn btn-secondary" onClick="{{ closePanel }}">Cancel</button><button type="button" class="btn btn-primary blueprint" onClick="{{ confirm.go }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>{{ confirm.label }}</button></div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const KEY = 'voyage.app.v1';
+const DAY = 864e5;
+const CATS = {
+  flight: { label: 'Flight', icon: 'M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z' },
+  hotel: { label: 'Hotel', icon: 'M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9' },
+  transport: { label: 'Transport', icon: 'M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2M9 17H15M5 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0M15 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0' },
+  food: { label: 'Food', icon: 'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7' },
+  activity: { label: 'Activities', icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20M16.2 7.8l-2 6.3-6.4 2.1 2-6.3z' },
+};
+const NAV_ICONS = { home: 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z', trips: 'M14.1 5.9 9.4 4.1a1 1 0 0 0-.8 0L3.6 6a1 1 0 0 0-.6.9V20l6-2.4 6 2.4 6-2.4V4l-6 2.4M9 4v14M15 6v14', budget: 'M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4', io: 'm21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16', settings: 'M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.8l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6' };
+const ALIAS = { transportation: 'transport', car: 'transport', taxi: 'transport', uber: 'transport', train: 'transport', lodging: 'hotel', accommodation: 'hotel', stay: 'hotel', activities: 'activity', tour: 'activity', excursion: 'activity', restaurant: 'food', dining: 'food', meal: 'food', flights: 'flight', air: 'flight' };
+const uid = () => Math.random().toString(36).slice(2, 9);
+const fmt = n => (n < 0 ? '−' : '') + '$' + Math.round(Math.abs(n)).toLocaleString('en-US');
+const fmt2 = n => '$' + (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const D = iso => new Date(iso + 'T00:00:00');
+const iso = d => d.toISOString().slice(0, 10);
+const addDays = (s, n) => { const d = D(s); d.setDate(d.getDate() + n); return iso(d); };
+const diffDays = (a, b) => Math.round((D(b) - D(a)) / DAY);
+const short = s => D(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const shortY = s => D(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const dayLabel = s => D(s).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+const total = o => o.items.reduce((a, b) => a + (+b.cost || 0), 0);
+const TODAY = iso(new Date());
+const ago = t => { const m = Math.round((Date.now() - t) / 6e4); return m < 1 ? 'now' : m < 60 ? m + 'm ago' : m < 1440 ? Math.round(m / 60) + 'h ago' : Math.round(m / 1440) + 'd ago'; };
+
+function seed() {
+  const P1 = { id: 'p1', name: 'John', role: 'Planner & Traveler' }, P2 = { id: 'p2', name: 'Sarah', role: 'Planner & Traveler' };
+  const it = (date, cat, title, cost, by, extra = {}) => ({ id: uid(), date, time: '', note: '', cat, title, cost, by, ...extra });
+  const cr = '2026-11-28';
+  const o1 = [it(cr, 'flight', 'Flight FLL → Liberia (LIR)', 789.98, 'John', { time: '07:15', note: 'Round trip for two' }), it(cr, 'transport', 'Uber Liberia airport → hotel', 12.45, 'John'), it(cr, 'hotel', 'Hotel Capitán Suizo, Tamarindo · 5 nights', 640, 'John', { note: 'Beachfront, breakfast included' }), it(addDays(cr, 1), 'activity', 'Surf lesson, Playa Tamarindo', 85, 'John', { time: '09:00' }), it(addDays(cr, 3), 'food', 'Dinner at Pangas Beach Club', 110, 'John', { time: '19:30' })];
+  const o2 = [it(cr, 'flight', 'Flight FLL → San José (SJO)', 812, 'Sarah', { time: '10:40' }), it(cr, 'transport', 'Rental car, 13 days (4x4)', 310, 'Sarah', { note: 'Needed for Monteverde roads' }), it(addDays(cr, 2), 'hotel', 'Eco-lodge Monteverde · 4 nights', 720, 'Sarah'), it(addDays(cr, 3), 'activity', 'Zip-line canopy tour', 75, 'Sarah', { time: '08:00' }), it(addDays(cr, 6), 'hotel', 'Casa Chameleon, Las Catalinas · 5 nights', 1450, 'Sarah')];
+  const fin = [{ ...o1[0], id: uid(), from: 'Option 1' }, { ...o2[1], id: uid(), from: 'Option 2' }, { ...o2[2], id: uid(), from: 'Option 2' }, { ...o1[3], id: uid(), from: 'Option 1' }];
+  const mk = (name, start, end, a, b) => ({ id: uid(), name, start, end, options: [{ id: 'final', name: 'Final', author: null, final: true, items: [] }, { id: uid(), name: 'Option 1', author: 'John', personId: 'p1', items: a }, { id: uid(), name: 'Option 2', author: 'Sarah', personId: 'p2', items: b }] });
+  const v1 = mk('Costa Rica', cr, '2026-12-11', o1, o2); v1.options[0].items = fin;
+  const v2 = mk('New York', '2027-03-12', '2027-03-15', [it('2027-03-12', 'flight', 'Flight FLL → JFK', 320, 'John'), it('2027-03-12', 'hotel', 'Hotel, Midtown · 3 nights', 980, 'John')], []);
+  const v3 = mk('Italy', '2027-06-05', '2027-06-19', [], []);
+  return { people: [P1, P2], user: 'p1', vacations: [v1, v2, v3], budget: { saved: 6300, rules: [{ id: 'r1', from: '2026-01-09', p1: 450, p2: 450 }] }, duotone: true,
+    activity: [{ t: Date.now() - 2 * 36e5, text: 'Sarah added a hotel to Option 2' }, { t: Date.now() - 5 * 36e5, text: 'John copied “Surf lesson” to Final' }, { t: Date.now() - 864e5, text: 'Sarah updated the budget' }] };
+}
+function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.vacations) return s; } catch (e) {} return seed(); }
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const data = load();
+    this.state = { ...data, route: { page: 'home', vacId: data.vacations[0]?.id, tab: 'plans' }, activeOpt: null, panel: null, copyFrom: null, editId: null, search: '',
+      importText: '', importMode: 'new', importFileName: 'or drag it onto the text box', exportOptId: 'final', copied: '', copiedPrompt: '', settingsMsg: '', confirm: null,
+      form: { date: '', time: '', cat: 'flight', title: '', note: '', cost: '' }, nv: { name: '', start: addDays(TODAY, 90), end: addDays(TODAY, 97) }, rule: { from: addDays(TODAY, 180), p1: '600', p2: '600' } };
+    this.f = (obj, key) => e => { const v = e.target.value; this.setState(s => ({ [obj]: { ...s[obj], [key]: v } })); };
+  }
+  componentDidUpdate() { const { people, user, vacations, budget, duotone, activity } = this.state; try { localStorage.setItem(KEY, JSON.stringify({ people, user, vacations, budget, duotone, activity })); } catch (e) {} }
+  log(text) { this.setState(s => ({ activity: [{ t: Date.now(), text }, ...s.activity].slice(0, 12) })); }
+  vac() { const s = this.state; return s.vacations.find(v => v.id === s.route.vacId) || s.vacations[0]; }
+  opt(v) { return v && (v.options.find(o => o.id === this.state.activeOpt) || v.options[0]); }
+  person() { return this.state.people.find(p => p.id === this.state.user) || this.state.people[0]; }
+  updVac(fn, id = this.state.route.vacId) { this.setState(s => ({ vacations: s.vacations.map(v => v.id === id ? fn(v) : v) })); }
+  updOpt(optId, fn) { this.updVac(v => ({ ...v, options: v.options.map(o => o.id === optId ? fn(o) : o) })); }
+  planCost(v) {
+    const f = v.options[0]; if (f.items.length) return { cost: total(f), src: 'Final' };
+    const best = v.options.slice(1).filter(o => o.items.length).sort((a, b) => total(b) - total(a))[0];
+    return best ? { cost: total(best), src: best.name + ' (Final is empty)' } : { cost: 0, src: 'nothing planned' };
+  }
+  simulate() {
+    const { budget, vacations } = this.state;
+    const rules = [...budget.rules].sort((a, b) => a.from.localeCompare(b.from));
+    const start = new Date(); start.setDate(1);
+    const end = new Date(start); end.setMonth(end.getMonth() + 12);
+    const lastTrip = vacations.map(v => v.start).sort().pop() || TODAY;
+    const simEnd = lastTrip > iso(end) ? lastTrip : iso(end);
+    const events = []; let d = rules[0].from; while (d < TODAY) d = addDays(d, 14); const nextPay = d;
+    for (; d <= simEnd; d = addDays(d, 14)) { const r = rules.filter(r => r.from <= d).pop(); events.push({ date: d, amt: (+r.p1 || 0) + (+r.p2 || 0) }); }
+    vacations.forEach(v => { const pc = this.planCost(v); events.push({ date: v.start, amt: -pc.cost, vac: v, src: pc.src }); });
+    events.sort((a, b) => a.date.localeCompare(b.date) || a.amt - b.amt);
+    let bal = +budget.saved || 0; const perVac = {}, monthEnd = {};
+    events.forEach(e => { if (e.vac) perVac[e.vac.id] = { before: bal, cost: -e.amt, after: bal + e.amt, src: e.src }; bal += e.amt; monthEnd[e.date.slice(0, 7)] = bal; });
+    const months = []; let run = +budget.saved || 0; const m = new Date(start);
+    for (let i = 0; i < 12; i++) { const key = iso(m).slice(0, 7); if (monthEnd[key] !== undefined) run = monthEnd[key]; months.push({ key, label: m.toLocaleDateString('en-US', { month: 'short' }) + (m.getMonth() === 0 ? ' ' + key.slice(2, 4) : ''), bal: run, trip: vacations.find(v => v.start.slice(0, 7) === key) }); m.setMonth(m.getMonth() + 1); }
+    vacations.forEach(v => { if (!perVac[v.id]) perVac[v.id] = { before: bal, cost: 0, after: bal, src: 'nothing planned' }; });
+    const cur = rules.filter(r => r.from <= TODAY).pop() || rules[0];
+    return { months, perVac, cur, nextPay };
+  }
+  toOptionJson(v, o) { return { schema: 'voyage.option.v1', vacation: v.name, name: o.name, author: o.author || 'Both', start: v.start, end: v.end, currency: 'USD', items: o.items.map(i => ({ day: diffDays(v.start, i.date) + 1, date: i.date, time: i.time || '', category: i.cat, title: i.title, note: i.note || '', cost: +i.cost || 0 })) }; }
+  parseImport(v) {
+    const t = this.state.importText.trim(); if (!t) return { ok: false, msg: 'Waiting for JSON…', count: 0 };
+    let j; try { j = JSON.parse(t); } catch (e) { return { ok: false, msg: 'Not valid JSON: ' + e.message, count: 0 }; }
+    if (j && j.schema === 'voyage.backup.v1') return { ok: false, msg: 'This is a full backup — restore it from Settings.', count: 0 };
+    const list = Array.isArray(j) ? j : Array.isArray(j.items) ? j.items : Array.isArray(j.itinerary) ? j.itinerary : null;
+    if (!list) return { ok: false, msg: 'Expected an "items" array.', count: 0 };
+    const days = diffDays(v.start, v.end) + 1; let clamped = 0, unknown = 0;
+    const items = list.filter(x => x && (x.title || x.name)).map(x => {
+      let date = x.date && /^\d{4}-\d{2}-\d{2}$/.test(x.date) ? x.date : null;
+      if (!date) { let day = +x.day || 1; if (day < 1 || day > days) { clamped++; day = Math.min(Math.max(day, 1), days); } date = addDays(v.start, day - 1); }
+      let cat = String(x.category || x.type || 'activity').toLowerCase(); cat = CATS[cat] ? cat : ALIAS[cat] || (unknown++, 'activity');
+      return { id: uid(), date, time: x.time || '', cat, title: x.title || x.name, note: x.note || x.description || '', cost: +String(x.cost ?? x.price ?? 0).replace(/[^0-9.]/g, '') || 0, by: j.author || x.author || 'Import' };
+    });
+    const notes = [clamped && `${clamped} moved into trip dates`, unknown && `${unknown} unknown categories → Activities`].filter(Boolean).join(' · ');
+    return { ok: items.length > 0, items, name: j.name, author: j.author || 'Import', count: items.length, msg: `${items.length} items · ${fmt2(items.reduce((a, b) => a + b.cost, 0))} total${notes ? ' · ' + notes : ''}` };
+  }
+  readFile(e, cb) { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => cb(String(r.result), f.name); r.readAsText(f); e.target.value = ''; }
+  renderVals() {
+    const s = this.state, sim = this.simulate(), me = this.person();
+    const set = p => this.setState(p);
+    const go = (page, extra = {}) => set({ route: { ...s.route, page, ...extra }, panel: null });
+    const openTrip = (vacId, tab = 'plans', activeOpt = null) => set({ route: { page: 'trip', vacId, tab }, activeOpt, panel: null });
+    const open = (panel, extra = {}) => set({ panel, copied: '', copiedPrompt: '', ...extra });
+    const close = () => set({ panel: null, copyFrom: null, editId: null, confirm: null });
+    const initial = n => (n || '?')[0].toUpperCase();
+    const upcoming = [...s.vacations].filter(v => v.end >= TODAY).sort((a, b) => a.start.localeCompare(b.start));
+    const next = upcoming[0] || s.vacations[0];
+    const v = this.vac() || next, o = this.opt(v);
+    const nDays = v ? diffDays(v.start, v.end) + 1 : 0;
+    const vacRow = vac => { const p = sim.perVac[vac.id]; const ok = p.after >= 0; return { id: vac.id, name: vac.name, range: `${short(vac.start)} – ${short(vac.end)}`, startShort: short(vac.start), days: diffDays(vac.start, vac.end) + 1, cost: fmt(p.cost), optCount: vac.options.length, open: () => openTrip(vac.id), daysUntil: Math.max(0, diffDays(TODAY, vac.start)),
+      verdict: p.cost ? (ok ? `Covered · ${fmt(p.after)} left` : `Short by ${fmt(-p.after)}`) : 'Nothing planned', verdictShort: p.cost ? (ok ? 'covered' : `short ${fmt(-p.after)}`) : 'no plan', tagClass: ok ? 'tag-accent' : 'tag-outline' }; };
+    const vacs = s.vacations.map(vacRow);
+    const pv = v ? sim.perVac[v.id] : { before: 0, after: 0, cost: 0, src: '' };
+    const activeVac = v ? { ...vacRow(v), range: `${shortY(v.start)} – ${shortY(v.end)}`, balanceBefore: fmt(pv.before), balanceAfter: fmt(pv.after), costSrc: pv.src } : {};
+    const cur = sim.cur, couple = (+cur.p1 || 0) + (+cur.p2 || 0);
+    const p1 = s.people[0], p2 = s.people[1];
+    const budgetSummary = { saved: fmt(s.budget.saved), couple: fmt(couple), month: fmt(couple * 26 / 12), split: `${p1.name} ${fmt(cur.p1)} · ${p2.name} ${fmt(cur.p2)}`, nextPay: shortY(sim.nextPay) };
+    const target = next ? sim.perVac[next.id].cost : 0; const pct = target ? Math.min(1, s.budget.saved / target) : 0;
+    const ring = { pct: Math.round(pct * 100) + '%', target: fmt(target), dash: `${(pct * 326.7).toFixed(1)} 326.7` };
+    const hour = new Date().getHours();
+    const greeting = `Good ${hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'}, ${p1.name} & ${p2.name}`;
+    const navItems = [['home', 'Home'], ['trips', 'Trips'], ['budget', 'Budget'], ['io', 'Import / Export'], ['settings', 'Settings']].map(([k, label]) => { const a = s.route.page === k || (k === 'trips' && s.route.page === 'trip') || (k === 'io' && s.route.page === 'trip' && s.route.tab === 'io'); return { label, icon: NAV_ICONS[k], bg: a ? 'var(--color-accent-800)' : 'transparent', line: a ? 'var(--color-accent-300)' : 'transparent', go: () => k === 'io' ? openTrip(v.id, 'io', s.activeOpt) : go(k) }; });
+    const people = s.people.map((p, i) => ({ id: p.id, n: i + 1, name: p.name, role: p.role, initial: initial(p.name), active: p.id === s.user, bg: p.id === s.user ? 'var(--color-accent-800)' : 'transparent', select: () => set({ user: p.id }),
+      setName: e => { const name = e.target.value; set({ people: s.people.map(x => x.id === p.id ? { ...x, name } : x), vacations: s.vacations.map(vv => ({ ...vv, options: vv.options.map(op => op.personId === p.id ? { ...op, author: name } : op) })) }); }, setRole: e => set({ people: s.people.map(x => x.id === p.id ? { ...x, role: e.target.value } : x) }) }));
+    // trip tabs
+    const tripTabs = [['plans', 'Plan options'], ['itinerary', 'Itinerary'], ['compare', 'Compare'], ['io', 'Import / Export']].map(([k, label]) => ({ label, go: () => set({ route: { ...s.route, tab: k } }), line: s.route.tab === k ? 'var(--color-accent-700)' : 'transparent', color: s.route.tab === k ? 'var(--color-accent-800)' : 'var(--color-text)' }));
+    const planCards = v ? v.options.map(op => { const t = total(op); const pid = op.personId; return { title: op.final ? 'Combined plan' : `${op.author}’s plan`, sub: op.final ? 'Final · merged from options' : op.name, total: fmt(t), count: op.items.length, perPerson: fmt(t / 2), isFinal: !!op.final, hasAvatar: !op.final && !!pid, personId: pid, initial: initial(op.author), bg: op.final ? 'var(--color-accent-100)' : 'transparent', open: () => openTrip(v.id, 'itinerary', op.id), canDelete: !op.final && v.options.length > 2,
+      remove: () => open('confirm', { confirm: { title: `Delete ${op.name}?`, body: `${op.items.length} items will be removed. Final is not affected.`, label: 'Delete option', go: () => { this.updOpt(op.id, x => x); this.updVac(x => ({ ...x, options: x.options.filter(y => y.id !== op.id) })); this.log(`${me.name} deleted ${op.name} in ${v.name}`); close(); } } }) }; }) : [];
+    const tabs = v ? v.options.map(op => { const a = op.id === o.id; return { name: op.name, sub: op.final ? `${op.items.length} items · merged` : `${op.author} · ${op.items.length} items`, onSelect: () => set({ activeOpt: op.id }), bg: a ? 'var(--color-accent-100)' : 'transparent', line: a ? 'var(--color-accent-700)' : 'transparent', color: a ? 'var(--color-accent-800)' : 'var(--color-text)' }; }) : [];
+    const itemRow = (i, op) => ({ title: i.title, note: i.note, time: i.time, cost: fmt2(i.cost), icon: CATS[i.cat].icon, by: initial(i.by), provenance: i.from ? `${i.by} · from ${i.from}` : i.by,
+      onCopy: () => open('copy', { copyFrom: { optId: op.id, itemId: i.id } }), onEdit: () => open('add', { editId: i.id, form: { date: i.date, time: i.time || '', cat: i.cat, title: i.title, note: i.note || '', cost: String(i.cost) } }),
+      onRemove: () => { this.updOpt(op.id, x => ({ ...x, items: x.items.filter(y => y.id !== i.id) })); this.log(`${me.name} removed “${i.title}” from ${op.name}`); } });
+    const days = []; if (v && o) { const byDate = {}; o.items.forEach(i => (byDate[i.date] = byDate[i.date] || []).push(i)); for (let k = 0; k < nDays; k++) { const date = addDays(v.start, k); const items = (byDate[date] || []).sort((a, b) => (a.time || '99').localeCompare(b.time || '99')); days.push({ n: String(k + 1).padStart(2, '0'), label: dayLabel(date), total: items.length ? fmt2(items.reduce((a, b) => a + +b.cost, 0)) : '', items: items.map(i => itemRow(i, o)), onAdd: () => open('add', { editId: null, form: { ...s.form, date } }) }); } }
+    const oTotal = o ? total(o) : 0;
+    const activeOpt = o ? { name: o.name, total: fmt(oTotal), perPerson: fmt(oTotal / 2), perDay: fmt(oTotal / nDays), hint: o.final ? 'The merged plan. Copy items here from any option; the budget uses this cost.' : `${o.author}’s plan. Anyone can add here; copy the good parts into Final.` } : {};
+    const breakdown = Object.keys(CATS).map(k => ({ label: CATS[k].label, icon: CATS[k].icon, total: fmt(o ? o.items.filter(i => i.cat === k).reduce((a, b) => a + +b.cost, 0) : 0) }));
+    const maxBal = Math.max(1, ...sim.months.map(m => Math.abs(m.bal)));
+    const months = sim.months.map(m => { const h = Math.max(3, Math.abs(m.bal) / maxBal * 96); const neg = m.bal < 0; return { hpx: h + 'px', fill: neg ? 'var(--color-accent-900)' : m.trip ? 'var(--color-accent-300)' : 'var(--color-accent-100)', balance: fmt(m.bal), label: m.label, hasTrip: !!m.trip, tripName: m.trip?.name, tripCost: m.trip ? '−' + fmt(sim.perVac[m.trip.id].cost) : '' }; });
+    // compare
+    const finalItems = v ? v.options[0].items : []; const inFinal = i => finalItems.some(f => f.title === i.title && f.date === i.date);
+    const cmpHeads = v ? v.options.map(op => ({ name: op.name, sub: op.final ? 'merged' : op.author, total: fmt(total(op)), bg: op.final ? 'var(--color-accent-100)' : 'transparent' })) : [];
+    const cmpRows = []; if (v) for (let k = 0; k < nDays; k++) { const date = addDays(v.start, k); const cells = v.options.map(op => ({ bg: op.final ? 'color-mix(in srgb,var(--color-accent-100) 50%,transparent)' : 'transparent', items: op.items.filter(i => i.date === date).map(i => ({ title: i.title, cost: fmt(i.cost), icon: CATS[i.cat].icon, canFinal: !op.final && !inFinal(i), inFinal: !op.final && inFinal(i), onToFinal: () => { this.updOpt('final', f => ({ ...f, items: [...f.items, { ...i, id: uid(), from: op.name }] })); this.log(`${me.name} copied “${i.title}” to Final`); } })) })); cmpRows.push({ n: k + 1, label: dayLabel(date), cells }); }
+    // copy
+    let copyItem = {}, copyTargets = [];
+    if (s.copyFrom && v) { const src = v.options.find(x => x.id === s.copyFrom.optId); const i = src?.items.find(y => y.id === s.copyFrom.itemId); if (i) { copyItem = { title: i.title, cost: fmt2(i.cost), dateLabel: dayLabel(i.date) }; copyTargets = v.options.filter(x => x.id !== src.id).map(t => { const exists = t.items.some(f => f.title === i.title && f.date === i.date); return { name: t.name, exists, sub: exists ? 'already there' : t.final ? 'merged plan' : t.author, onCopy: () => { this.updOpt(t.id, x => ({ ...x, items: [...x.items, { ...i, id: uid(), from: src.name }] })); this.log(`${me.name} copied “${i.title}” to ${t.name}`); } }; }); } }
+    // import/export
+    const imp = v ? this.parseImport(v) : { ok: false, msg: '', count: 0 };
+    const importModes = v ? [{ id: 'new', label: `New option (${imp.name || 'Option ' + v.options.length})` }, ...v.options.map(op => ({ id: op.id, label: `Merge into ${op.name}` }))].map(m => ({ label: m.label, checked: s.importMode === m.id, onSelect: () => set({ importMode: m.id }) })) : [];
+    const exportOpt = v ? (v.options.find(x => x.id === s.exportOptId) || v.options[0]) : null;
+    const exportJson = v ? JSON.stringify(this.toOptionJson(v, exportOpt), null, 2) : '';
+    const schema = JSON.stringify({ schema: 'voyage.option.v1', name: 'Option 3', author: 'ChatGPT', items: [{ day: 1, time: '07:15', category: 'flight|hotel|transport|food|activity', title: 'string', note: 'string', cost: 0 }] });
+    const promptText = v ? `Plan a ${nDays}-day trip to ${v.name} for two adults, ${shortY(v.start)} to ${shortY(v.end)}. Include flights, lodging, transport, notable meals and activities with realistic USD costs for both people combined. Return ONLY JSON in this exact shape (day 1 = ${shortY(v.start)}): ${schema}` : '';
+    const copyText = (t, key) => () => { navigator.clipboard?.writeText(t); set({ [key]: 'Copied ✓' }); };
+    const backup = JSON.stringify({ schema: 'voyage.backup.v1', exported: new Date().toISOString(), people: s.people, vacations: s.vacations, budget: s.budget, activity: s.activity }, null, 2);
+    const rules = [...s.budget.rules].sort((a, b) => a.from.localeCompare(b.from)).map((r, idx) => ({ from: shortY(r.from), p1: fmt(r.p1), p2: fmt(r.p2), month: fmt(((+r.p1 || 0) + (+r.p2 || 0)) * 26 / 12), locked: idx === 0, onRemove: () => set({ budget: { ...s.budget, rules: s.budget.rules.filter(x => x.id !== r.id) } }) }));
+    const setCur = (key, val) => { set({ budget: { ...s.budget, rules: s.budget.rules.map(r => r.id === cur.id ? { ...r, [key]: Math.max(0, +val || 0) } : r) } }); this.log(`${me.name} set ${key === 'p1' ? p1.name : p2.name}’s contribution to ${fmt(val)}`); };
+    const contribCards = [[p1, 'p1'], [p2, 'p2']].map(([p, k]) => ({ name: p.name, amount: cur[k], from: shortY(cur.from), set: e => setCur(k, e.target.value), inc: () => setCur(k, (+cur[k] || 0) + 50), dec: () => setCur(k, (+cur[k] || 0) - 50) }));
+    const catOptions = Object.keys(CATS).map(k => ({ label: CATS[k].label, icon: CATS[k].icon, bg: s.form.cat === k ? 'var(--color-accent)' : 'transparent', fg: s.form.cat === k ? 'var(--color-bg)' : 'var(--color-text)', onSelect: () => set({ form: { ...s.form, cat: k } }) }));
+    return {
+      navItems, people, currentUser: me.name, p1Name: p1.name, p2Name: p2.name, greeting, homeSub: next ? `${next.name} is ${Math.max(0, diffDays(TODAY, next.start))} days away.` : 'No trips yet — create one.',
+      pageHome: s.route.page === 'home', pageTrips: s.route.page === 'trips', pageTrip: s.route.page === 'trip' && !!v, pageBudget: s.route.page === 'budget', pageSettings: s.route.page === 'settings',
+      tabPlans: s.route.tab === 'plans', tabItinerary: s.route.tab === 'itinerary', tabCompare: s.route.tab === 'compare', tabIo: s.route.tab === 'io',
+      goTrips: () => go('trips'), goBudget: () => go('budget'), goIo: () => set({ route: { ...s.route, tab: 'io' }, exportOptId: o.id }),
+      hasNext: !!next, nextVac: next ? vacRow(next) : {}, vacs, vacsFiltered: vacs.filter(x => x.name.toLowerCase().includes(s.search.toLowerCase())), search: s.search, fSearch: e => set({ search: e.target.value }),
+      ring, budgetSummary, activityLatest: s.activity[0] ? `${s.activity[0].text} · ${ago(s.activity[0].t)}` : '', activity: s.activity.slice(0, 6).map(a => ({ text: a.text, when: ago(a.t) })),
+      activeVac, activeOpt, tripTabs, planCards, tabs, days, breakdown, months, cmpCols: v ? `repeat(${v.options.length}, minmax(0,1fr))` : '1fr', cmpHeads, cmpRows,
+      duoClass: s.duotone ? 'duotone' : '', duotoneOn: !!s.duotone, duoDotBg: s.duotone ? 'var(--color-accent)' : 'transparent', toggleDuotone: () => set({ duotone: !s.duotone }),
+      addOption: () => { const id = uid(); this.updVac(x => ({ ...x, options: [...x.options, { id, name: 'Option ' + x.options.length, author: me.name, personId: me.id, items: [] }] })); this.log(`${me.name} created a new option in ${v.name}`); openTrip(v.id, 'itinerary', id); },
+      removeVac: () => open('confirm', { confirm: { title: `Delete ${v.name}?`, body: 'All options and items for this trip are removed. Export a backup first if unsure.', label: 'Delete trip', go: () => { const rest = s.vacations.filter(x => x.id !== v.id); set({ vacations: rest, route: { page: 'trips', vacId: rest[0]?.id, tab: 'plans' }, panel: null, confirm: null }); } } }),
+      hasPanel: !!s.panel, panelAdd: s.panel === 'add', panelCopy: s.panel === 'copy', panelNewVac: s.panel === 'newvac', panelConfirm: s.panel === 'confirm', confirm: s.confirm || {},
+      addTitle: s.editId ? 'Edit item' : `Add item to ${o?.name || ''}`, addSubmit: s.editId ? 'Save' : 'Add item',
+      openAdd: () => open('add', { editId: null, form: { ...s.form, title: '', note: '', cost: '', date: s.form.date >= v.start && s.form.date <= v.end ? s.form.date : v.start } }), openNewVac: () => open('newvac'),
+      closePanel: close, closePanelBackdrop: e => { if (e.target === e.currentTarget) close(); }, stop: e => e.stopPropagation(),
+      form: s.form, fDate: this.f('form', 'date'), fTime: this.f('form', 'time'), fTitle: this.f('form', 'title'), fNote: this.f('form', 'note'), fCost: this.f('form', 'cost'), catOptions,
+      dayOptions: v ? Array.from({ length: nDays }, (_, k) => { const d = addDays(v.start, k); return { value: d, label: `Day ${k + 1} · ${dayLabel(d)}` }; }) : [],
+      submitAdd: () => { if (!s.form.title.trim() || !o) return; const base = { date: s.form.date, time: s.form.time, cat: s.form.cat, title: s.form.title.trim(), note: s.form.note.trim(), cost: +s.form.cost || 0 }; if (s.editId) { this.updOpt(o.id, x => ({ ...x, items: x.items.map(i => i.id === s.editId ? { ...i, ...base } : i) })); this.log(`${me.name} edited “${base.title}” in ${o.name}`); } else { this.updOpt(o.id, x => ({ ...x, items: [...x.items, { id: uid(), by: me.name, ...base }] })); this.log(`${me.name} added “${base.title}” to ${o.name}`); } close(); },
+      copyItem, copyTargets,
+      importText: s.importText, fImport: e => set({ importText: e.target.value }), importFileName: s.importFileName, fImportFile: e => this.readFile(e, (txt, name) => set({ importText: txt, importFileName: name })),
+      importResult: { msg: imp.msg, count: imp.count, disabled: !imp.ok, color: imp.ok ? 'var(--color-accent-700)' : 'var(--color-neutral-700)' }, importModes,
+      submitImport: () => { if (!imp.ok) return; let target; if (s.importMode === 'new') { target = uid(); const name = imp.name || 'Option ' + v.options.length; this.updVac(x => ({ ...x, options: [...x.options, { id: target, name, author: imp.author, items: imp.items }] })); this.log(`${me.name} imported ${imp.count} items as ${name}`); } else { target = s.importMode; this.updOpt(target, x => ({ ...x, items: [...x.items, ...imp.items.map(i => ({ ...i, from: imp.name || 'import' }))] })); this.log(`${me.name} imported ${imp.count} items into ${v.options.find(x => x.id === target)?.name}`); } set({ importText: '', importFileName: 'or drag it onto the text box' }); openTrip(v.id, 'itinerary', target); },
+      exportOptId: exportOpt?.id, fExportOpt: e => set({ exportOptId: e.target.value }), exportChoices: v ? v.options.map(op => ({ value: op.id, label: op.final ? 'Final (merged)' : `${op.name} · ${op.author}` })) : [],
+      exportText: exportJson, exportHref: 'data:application/json;charset=utf-8,' + encodeURIComponent(exportJson), exportFile: v ? `${v.name.toLowerCase().replace(/\s+/g, '-')}-${(exportOpt.name).toLowerCase().replace(/\s+/g, '-')}.json` : 'plan.json', copyExport: copyText(exportJson, 'copied'), copyExportLabel: s.copied || 'Copy JSON',
+      promptText, copyPrompt: copyText(promptText, 'copiedPrompt'), copyPromptLabel: s.copiedPrompt || 'Copy prompt',
+      budget: s.budget, fSaved: e => set({ budget: { ...s.budget, saved: +e.target.value || 0 } }), rules, contribCards, rule: s.rule, fRuleFrom: this.f('rule', 'from'), fRuleP1: this.f('rule', 'p1'), fRuleP2: this.f('rule', 'p2'),
+      addRule: () => { if (!s.rule.from) return; set({ budget: { ...s.budget, rules: [...s.budget.rules, { id: uid(), from: s.rule.from, p1: +s.rule.p1 || 0, p2: +s.rule.p2 || 0 }] } }); this.log(`${me.name} scheduled a contribution change from ${shortY(s.rule.from)}`); },
+      nv: s.nv, fNvName: this.f('nv', 'name'), fNvStart: this.f('nv', 'start'), fNvEnd: this.f('nv', 'end'),
+      submitNewVac: () => { if (!s.nv.name.trim() || s.nv.end < s.nv.start) return; const id = uid(), o1 = uid(); set({ vacations: [...s.vacations, { id, name: s.nv.name.trim(), start: s.nv.start, end: s.nv.end, options: [{ id: 'final', name: 'Final', author: null, final: true, items: [] }, { id: o1, name: 'Option 1', author: p1.name, personId: p1.id, items: [] }, { id: uid(), name: 'Option 2', author: p2.name, personId: p2.id, items: [] }] }], nv: { ...s.nv, name: '' } }); this.log(`${me.name} created the trip ${s.nv.name.trim()}`); openTrip(id, 'plans'); },
+      backupHref: 'data:application/json;charset=utf-8,' + encodeURIComponent(backup),
+      fRestore: e => this.readFile(e, txt => { try { const j = JSON.parse(txt); if (j.schema !== 'voyage.backup.v1' || !Array.isArray(j.vacations)) throw new Error('not a Voyage backup'); set({ people: j.people || s.people, vacations: j.vacations, budget: j.budget || s.budget, activity: j.activity || [], route: { page: 'home', vacId: j.vacations[0]?.id, tab: 'plans' }, settingsMsg: `Restored ${j.vacations.length} trips.` }); } catch (err) { set({ settingsMsg: 'Could not restore: ' + err.message }); } }),
+      resetAll: () => open('confirm', { confirm: { title: 'Reset to sample data?', body: 'Your trips, options and budget rules in this browser are replaced with the demo set.', label: 'Reset', go: () => { const d = seed(); set({ ...d, route: { page: 'home', vacId: d.vacations[0].id, tab: 'plans' }, panel: null, confirm: null, settingsMsg: 'Reset done.' }); } } }),
+      settingsMsg: s.settingsMsg,
+    };
+  }
+}
+</script>
+</body>
+</html>
