@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Dialog } from '../components/Dialog';
 import { FundChart } from '../components/FundChart';
 import { Icon } from '../components/Icon';
 import { Badge } from '../components/ui/Badge';
@@ -6,16 +7,66 @@ import { useToast } from '../components/ui/Toast';
 import { addDays, fmt, shortY, today, uid } from '../lib/format';
 import { useStore } from '../state/store';
 import { budgetSummary, runSimulation } from '../state/derive';
+import type { Simulation } from '../lib/budget';
 
+/**
+ * The projection is what this page is for, so it leads. Everything that sets it
+ * — the balance, the two contributions, the rules — lives one click away behind
+ * Budget, where it is available without competing with the chart for the fold.
+ */
 export function Budget() {
-  const { data, setData, log, me } = useStore();
-  const toast = useToast();
+  const { data } = useStore();
+  const [open, setOpen] = useState(false);
   const sim = useMemo(() => runSimulation(data), [data]);
   const summary = budgetSummary(data, sim);
-  const [p1, p2] = data.people;
 
+  const trough = sim.months.reduce((lo, m) => Math.min(lo, m.bal), Infinity);
+  const dips = sim.months.some((m) => m.bal < 0);
+
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s3)', flexWrap: 'wrap' }}>
+        <button type="button" className="btn btn-primary" onClick={() => setOpen(true)}>
+          <Icon name="budget" size={14} />
+          Budget
+        </button>
+        <span className="muted" style={{ fontSize: 13 }}>
+          {summary.couple} every 2 weeks · {summary.saved} saved · next payday {summary.nextPay}
+        </span>
+        <span style={{ marginLeft: 'auto' }}>
+          {dips ? <Badge tone="critical">Dips to {fmt(trough)}</Badge> : <Badge tone="good">Stays positive</Badge>}
+        </span>
+      </div>
+
+      <section className="card card-flush">
+        <header className="card-hd">
+          <div>
+            <h3>12-month projection</h3>
+            <p className="subtle" style={{ margin: '2px 0 0', fontSize: 12 }}>
+              Month-end balance. Each trip is charged in its start month at the Final cost, or the priciest option while
+              Final is empty.
+            </p>
+          </div>
+        </header>
+        <div className="card-bd">
+          <FundChart months={sim.months} tripCost={(id) => sim.perVac[id]?.cost ?? 0} />
+        </div>
+      </section>
+
+      {open && <BudgetDialog sim={sim} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function BudgetDialog({ sim, onClose }: { sim: Simulation; onClose: () => void }) {
+  const { data, setData, log, me } = useStore();
+  const toast = useToast();
+  const summary = budgetSummary(data, sim);
+  const [p1, p2] = data.people;
   const [rule, setRule] = useState({ from: addDays(today(), 180), p1: '600', p2: '600' });
+
   const cur = sim.cur;
+  const rules = [...data.budget.rules].sort((a, b) => a.from.localeCompare(b.from));
 
   const setCur = (key: 'p1' | 'p2', val: string) => {
     const amount = Math.max(0, Number(val) || 0);
@@ -25,10 +76,6 @@ export function Budget() {
     }));
     log(`${me.name} set ${key === 'p1' ? p1.name : p2?.name}’s contribution to ${fmt(amount)}`);
   };
-
-  const rules = [...data.budget.rules].sort((a, b) => a.from.localeCompare(b.from));
-  const trough = sim.months.reduce((lo, m) => Math.min(lo, m.bal), Infinity);
-  const shortMonths = sim.months.filter((m) => m.bal < 0);
 
   const addRule = () => {
     if (!rule.from) return;
@@ -49,96 +96,76 @@ export function Budget() {
   ];
 
   return (
-    <>
-      <div className="page-hd">
-        <div>
-          <h1>Travel fund</h1>
-          <p>Paid every 2 weeks, split between the two of you. Schedule a change ahead of time to see it land.</p>
-        </div>
-      </div>
-
-      <div className="grid grid-kpi">
-        <section className="card">
-          <span className="label">Saved so far</span>
-          <input
-            className="input input-lg"
-            type="number"
-            value={data.budget.saved}
-            onChange={(e) => setData((s) => ({ ...s, budget: { ...s.budget, saved: Number(e.target.value) || 0 } }))}
-            aria-label="Amount saved so far"
-          />
-          <span className="subtle" style={{ fontSize: 12 }}>
-            Match this to your real account balance.
+    <Dialog
+      title="Budget"
+      description="Paid every 2 weeks, split between the two of you. The projection behind this updates as you type."
+      onClose={onClose}
+      width={760}
+      footer={
+        <>
+          <span className="muted" style={{ fontSize: 12 }}>
+            {summary.couple} every 2 weeks · ≈ {summary.month} / month
           </span>
-        </section>
-
-        {people.map((c) => (
-          <section className="card" key={c.key}>
-            <span className="label">{c.name} · every 2 weeks</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button
-                type="button"
-                className="btn btn-icon"
-                onClick={() => setCur(c.key, String((Number(cur[c.key]) || 0) - 50))}
-                aria-label={`Lower ${c.name}’s contribution by 50`}
-              >
-                <Icon name="minus" size={15} />
-              </button>
-              <input
-                className="input input-lg"
-                type="number"
-                step={10}
-                value={cur[c.key]}
-                onChange={(e) => setCur(c.key, e.target.value)}
-                style={{ textAlign: 'center' }}
-                aria-label={`${c.name}’s contribution`}
-              />
-              <button
-                type="button"
-                className="btn btn-icon"
-                onClick={() => setCur(c.key, String((Number(cur[c.key]) || 0) + 50))}
-                aria-label={`Raise ${c.name}’s contribution by 50`}
-              >
-                <Icon name="plus" size={15} />
-              </button>
-            </div>
+          <span className="spacer" />
+          <button type="button" className="btn btn-primary" onClick={onClose}>
+            Done
+          </button>
+        </>
+      }
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s4)' }}>
+        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--s3)' }}>
+          <section className="card card-tight">
+            <span className="label">Saved so far</span>
+            <input
+              className="input input-lg"
+              type="number"
+              value={data.budget.saved}
+              onChange={(e) => setData((s) => ({ ...s, budget: { ...s.budget, saved: Number(e.target.value) || 0 } }))}
+              aria-label="Amount saved so far"
+            />
             <span className="subtle" style={{ fontSize: 12 }}>
-              Current rule, from {shortY(cur.from)}
+              Match this to your real account balance.
             </span>
           </section>
-        ))}
 
-        <section className="card">
-          <span className="label">Together</span>
-          <span className="stat-value num">{summary.couple}</span>
-          <span style={{ fontSize: 12, color: 'var(--text-2)' }}>≈ {summary.month} / month</span>
-          <span className="subtle" style={{ fontSize: 12, marginTop: 'auto' }}>
-            Next payday {summary.nextPay}
-          </span>
-        </section>
-      </div>
-
-      <section className="card card-flush">
-        <header className="card-hd">
-          <div>
-            <h3>12-month projection</h3>
-            <p className="subtle" style={{ margin: '2px 0 0', fontSize: 12 }}>
-              Month-end balance. Each trip is charged in its start month at the Final cost, or the priciest option while
-              Final is empty.
-            </p>
-          </div>
-          {shortMonths.length > 0 ? (
-            <Badge tone="critical">Dips to {fmt(trough)}</Badge>
-          ) : (
-            <Badge tone="good">Stays positive</Badge>
-          )}
-        </header>
-        <div className="card-bd">
-          <FundChart months={sim.months} tripCost={(id) => sim.perVac[id]?.cost ?? 0} />
+          {people.map((c) => (
+            <section className="card card-tight" key={c.key}>
+              <span className="label">{c.name} · every 2 weeks</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button
+                  type="button"
+                  className="btn btn-icon"
+                  onClick={() => setCur(c.key, String((Number(cur[c.key]) || 0) - 50))}
+                  aria-label={`Lower ${c.name}’s contribution by 50`}
+                >
+                  <Icon name="minus" size={15} />
+                </button>
+                <input
+                  className="input input-lg"
+                  type="number"
+                  step={10}
+                  value={cur[c.key]}
+                  onChange={(e) => setCur(c.key, e.target.value)}
+                  style={{ textAlign: 'center' }}
+                  aria-label={`${c.name}’s contribution`}
+                />
+                <button
+                  type="button"
+                  className="btn btn-icon"
+                  onClick={() => setCur(c.key, String((Number(cur[c.key]) || 0) + 50))}
+                  aria-label={`Raise ${c.name}’s contribution by 50`}
+                >
+                  <Icon name="plus" size={15} />
+                </button>
+              </div>
+              <span className="subtle" style={{ fontSize: 12 }}>
+                Current rule, from {shortY(cur.from)}
+              </span>
+            </section>
+          ))}
         </div>
-      </section>
 
-      <div className="grid grid-2">
         <section className="card card-flush">
           <header className="card-hd">
             <h3>Contribution rules</h3>
@@ -199,7 +226,7 @@ export function Budget() {
             “From March we each put in $600.” The projection updates immediately; nothing actually changes until that
             date.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr', gap: 'var(--s2)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr auto', gap: 'var(--s2)', alignItems: 'end' }}>
             <div className="field">
               <label htmlFor="r-from">From</label>
               <input
@@ -232,13 +259,13 @@ export function Budget() {
                 />
               </div>
             )}
+            <button type="button" className="btn btn-primary" onClick={addRule}>
+              <Icon name="plus" size={14} />
+              Add rule
+            </button>
           </div>
-          <button type="button" className="btn btn-primary" onClick={addRule} style={{ alignSelf: 'flex-start' }}>
-            <Icon name="plus" size={14} />
-            Add rule
-          </button>
         </section>
       </div>
-    </>
+    </Dialog>
   );
 }

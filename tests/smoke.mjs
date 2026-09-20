@@ -298,6 +298,19 @@ await step('chart has a table view', async () => {
   await page.waitForSelector('.chart-wrap svg');
 });
 
+await step('the fund page leads with the chart, controls behind Budget', async () => {
+  const chart = await page.locator('.chart-wrap svg').boundingBox();
+  const btn = await page.locator('.content button:has-text("Budget")').first().boundingBox();
+  if (btn.y > chart.y) throw new Error('Budget button is not above the chart');
+  // Nothing but the button and the chart card on the page itself.
+  if (await page.locator('.content input[type=number]').count()) throw new Error('controls still inline');
+  await page.locator('.content button:has-text("Budget")').first().click();
+  await page.waitForSelector('.dialog');
+  const t = await page.textContent('.dialog');
+  for (const bit of ['Saved so far', 'every 2 weeks', 'Contribution rules', 'Schedule a change'])
+    if (!t.includes(bit)) throw new Error('modal missing: ' + bit);
+});
+
 await step('raising a contribution moves the projection', async () => {
   // Assert on the plotted geometry: the axis ticks round to clean numbers and
   // there is deliberately no value label per point, so the text can be
@@ -306,15 +319,31 @@ await step('raising a contribution moves the projection', async () => {
   const before = await line.getAttribute('d');
   await page.locator('button[aria-label="Raise John’s contribution by 50"]').click();
   await page.waitForTimeout(150);
+  // The chart is still mounted behind the modal, so it re-renders live.
   if ((await line.getAttribute('d')) === before) throw new Error('chart did not react');
-  if (!(await page.textContent('body')).includes('$950')) throw new Error('couple total did not update');
+  if (!(await page.textContent('.dialog')).includes('$950')) throw new Error('couple total did not update');
 });
 
 await step('a future rule is flagged as scheduled', async () => {
   await page.fill('#r-from', '2027-01-01');
-  await page.click('button:has-text("Add rule")');
+  await page.click('.dialog button:has-text("Add rule")');
   await page.waitForSelector('td:has-text("Jan 1, 2027")');
   if (!(await page.locator('.badge', { hasText: 'scheduled' }).count())) throw new Error('no scheduled badge');
+  await page.click('.dialog-ft button:has-text("Done")');
+  await page.waitForTimeout(150);
+  if (await page.locator('.dialog').count()) throw new Error('modal did not close');
+});
+
+await step('item categories each carry their own colour', async () => {
+  await openTrip('Costa Rica');
+  await page.click('.tab:has-text("Itinerary")');
+  await page.locator('button', { hasText: /^Option 1/ }).first().click();
+  await page.waitForSelector('.item-cat');
+  const colours = await page.locator('.item-cat').evaluateAll((els) =>
+    [...new Set(els.map((e) => getComputedStyle(e).color))]);
+  if (colours.length < 3) throw new Error('icons share a colour: ' + colours.join(' | '));
+  const cls = await page.locator('.item-cat').first().getAttribute('class');
+  if (!/cat-(flight|hotel|transport|food|activity)/.test(cls)) throw new Error('no category class: ' + cls);
 });
 
 /* ── settings ──────────────────────────────────────────────────────────── */

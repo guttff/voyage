@@ -244,13 +244,21 @@
 .day-items > div + div .item { margin-top: 6px; }
 .item:hover { border-color: var(--border-strong); box-shadow: var(--sh-sm); }
 .item:hover .item-acts, .item:focus-within .item-acts { opacity: 1; }
+/* Each category carries its own hue as well as its own icon shape, so the
+   types separate at a glance without colour having to do the work alone. */
+.cat-flight { --cat: var(--cat-flight); }
+.cat-hotel { --cat: var(--cat-hotel); }
+.cat-transport { --cat: var(--cat-transport); }
+.cat-food { --cat: var(--cat-food); }
+.cat-activity { --cat: var(--cat-activity); }
+
 .item-cat {
   display: grid;
   place-items: center;
   width: 28px;
   height: 28px;
-  color: var(--accent-700);
-  background: var(--accent-50);
+  color: var(--cat, var(--accent-700));
+  background: color-mix(in srgb, var(--cat, var(--accent-700)) 11%, #fff);
   border-radius: var(--r-sm);
 }
 .item-title { font-size: 13px; font-weight: 600; }

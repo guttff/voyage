@@ -81,6 +81,18 @@
   --info-text: #6d28d9;     /* 6.79:1 */
   --info-bg: #f5f3ff;
 
+  /* — item categories. Five slots, validated all-pairs against white: worst
+       CVD ΔE 7.0 (deutan), worst normal-vision ΔE 18.0, all >= 3:1. 7.0 sits in
+       the 6–8 floor band, which is legal because hue is never the only channel
+       — every category also has its own icon shape and, in most places, a
+       written label. Deliberately clear of the reserved status colours and of
+       the money teal. — */
+  --cat-flight: #0369a1;
+  --cat-hotel: #6b21a8;
+  --cat-transport: #c2410c;
+  --cat-food: #c026d3;
+  --cat-activity: #15803d;
+
   /* — data. The fund is money, so it is teal; the line is the deep step so it
        stays legible as a 2px mark. — */
   --series: #0f766e;

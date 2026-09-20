@@ -7,10 +7,12 @@ type Props = {
   onClose: () => void;
   children: ReactNode;
   footer: ReactNode;
+  /** Widen past the default 560px for dialogs that hold a whole panel. */
+  width?: number;
 };
 
 /** Modal shell: backdrop click or Escape dismisses; focus starts inside. */
-export function Dialog({ title, description, onClose, children, footer }: Props) {
+export function Dialog({ title, description, onClose, children, footer, width }: Props) {
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,7 +32,14 @@ export function Dialog({ title, description, onClose, children, footer }: Props)
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="dialog" role="dialog" aria-modal="true" aria-label={title} ref={box}>
+      <div
+        className="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        ref={box}
+        style={width ? { width: `min(${width}px, 100%)` } : undefined}
+      >
         <div className="dialog-hd">
           <h2>{title}</h2>
           {description && <p>{description}</p>}

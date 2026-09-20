@@ -231,7 +231,7 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
                                 </g>
                               </svg>
                             </button>
-                            <span className="item-cat">
+                            <span className={`item-cat cat-${i.cat}`}>
                               <Icon d={CATS[i.cat].icon} size={15} />
                             </span>
                             <div style={{ minWidth: 0 }}>
@@ -306,7 +306,7 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
           className="drag-ghost"
           style={{ left: drag.ghost.x, top: drag.ghost.y, width: drag.ghost.w, height: drag.ghost.h }}
         >
-          <span className="item-cat">
+          <span className={`item-cat cat-${dragged.cat}`}>
             <Icon d={CATS[dragged.cat].icon} size={15} />
           </span>
           <span className="item-title">{dragged.title}</span>
@@ -340,12 +340,12 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
             {CAT_KEYS.map((k) => {
               const v = opt.items.filter((i) => i.cat === k).reduce((a, b) => a + Number(b.cost), 0);
               return (
-                <div key={k} style={{ display: 'grid', gridTemplateColumns: '18px 1fr auto', gap: 'var(--s2)', alignItems: 'center' }}>
-                  <Icon d={CATS[k].icon} size={14} stroke="var(--text-3)" />
+                <div key={k} className={`cat-${k}`} style={{ display: 'grid', gridTemplateColumns: '18px 1fr auto', gap: 'var(--s2)', alignItems: 'center' }}>
+                  <Icon d={CATS[k].icon} size={14} stroke="var(--cat)" />
                   <div>
                     <div style={{ fontSize: 12, marginBottom: 3 }}>{CATS[k].label}</div>
                     <div style={{ height: 6, borderRadius: 3, background: 'var(--surface-3)', overflow: 'hidden' }}>
-                      <div style={{ width: `${(v / maxCat) * 100}%`, height: '100%', borderRadius: 3, background: 'var(--teal)' }} />
+                      <div style={{ width: `${(v / maxCat) * 100}%`, height: '100%', borderRadius: 3, background: 'var(--cat)' }} />
                     </div>
                   </div>
                   <span className="num" style={{ fontSize: 12, fontWeight: 600 }}>

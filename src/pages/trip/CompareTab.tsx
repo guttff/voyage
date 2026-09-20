@@ -80,8 +80,8 @@ export function CompareTab({ vac }: { vac: Vacation }) {
                           {items.map((i) => {
                             const already = inFinal(i);
                             return (
-                              <div key={i.id} className="cmp-item" title={`${i.title} · ${dayLabel(i.date)}`}>
-                                <Icon d={CATS[i.cat].icon} size={13} stroke="var(--text-3)" />
+                              <div key={i.id} className={`cmp-item cat-${i.cat}`} title={`${i.title} · ${dayLabel(i.date)}`}>
+                                <Icon d={CATS[i.cat].icon} size={13} stroke="var(--cat)" />
                                 <span className="nm">{i.title}</span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                   <span className="num">{fmt(i.cost)}</span>

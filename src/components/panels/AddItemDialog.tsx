@@ -103,11 +103,11 @@ export function AddItemDialog({ vac, optId, editId, date }: Props) {
               <button
                 key={k}
                 type="button"
-                className="seg-opt"
+                className={`seg-opt cat-${k}`}
                 aria-pressed={form.cat === k}
                 onClick={() => set('cat', k)}
               >
-                <Icon d={CATS[k].icon} size={13} />
+                <Icon d={CATS[k].icon} size={13} stroke={form.cat === k ? 'currentColor' : 'var(--cat)'} />
                 {CATS[k].label}
               </button>
             ))}
