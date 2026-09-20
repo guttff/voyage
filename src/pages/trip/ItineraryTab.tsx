@@ -6,7 +6,7 @@ import { useToast } from '../../components/ui/Toast';
 import { useItemDrag, stepTarget } from '../../components/itinerary/useItemDrag';
 import type { DayLayout, DropTarget } from '../../components/itinerary/useItemDrag';
 import { CATS, CAT_KEYS, total } from '../../lib/constants';
-import { addDays, dayLabel, diffDays, fmt, fmt2, initial, short } from '../../lib/format';
+import { addDays, dayLabel, diffDays, durationLabel, fmt, fmt2, initial, short, time12 } from '../../lib/format';
 import { placeInDay, sortDay } from '../../lib/order';
 import { useStore } from '../../state/store';
 import { useUi } from '../../state/ui';
@@ -71,6 +71,9 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
     ...CAT_KEYS.map((k) => opt.items.filter((i) => i.cat === k).reduce((a, b) => a + Number(b.cost), 0)),
   );
 
+  // The rail is reserved for the whole plan when anything in it is timed, so
+  // rows stay aligned instead of stepping in and out.
+  const anyTimed = opt.items.some((i) => i.time || i.duration);
   const dragged = drag.dragId ? opt.items.find((i) => i.id === drag.dragId) : undefined;
 
   return (
@@ -202,7 +205,7 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
                       </button>
                     </div>
 
-                    <div className="day-items">
+                    <div className={`day-items${anyTimed ? ' has-rail' : ''}`}>
                       {items.map((i, idx) => (
                         <div key={i.id}>
                           {isTargetDay && drag.target?.index === idx && <div className="drop-line" />}
@@ -231,17 +234,18 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
                                 </g>
                               </svg>
                             </button>
+                            {anyTimed && (
+                              <span className="item-when">
+                                {i.time && <span className="at">{time12(i.time)}</span>}
+                                {durationLabel(i.duration) && <span className="for">{durationLabel(i.duration)}</span>}
+                              </span>
+                            )}
                             <span className={`item-cat cat-${i.cat}`}>
                               <Icon d={CATS[i.cat].icon} size={15} />
                             </span>
                             <div style={{ minWidth: 0 }}>
                               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <span className="item-title">{i.title}</span>
-                                {i.time && (
-                                  <span className="subtle num" style={{ fontSize: 11 }}>
-                                    {i.time}
-                                  </span>
-                                )}
                               </div>
                               {i.note && <div className="item-note">{i.note}</div>}
                               <div className="item-by">

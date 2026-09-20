@@ -12,6 +12,8 @@ export type Item = {
   date: string;
   /** 24h HH:mm, or '' when the item has no set time. */
   time: string;
+  /** How long it runs, in minutes. Optional — most items have no duration. */
+  duration?: number;
   note: string;
   cat: CatKey;
   title: string;
@@ -84,6 +86,8 @@ export type Route = {
 export type ItemForm = {
   date: string;
   time: string;
+  /** Minutes, as a string so the empty option round-trips cleanly. */
+  duration: string;
   cat: CatKey;
   title: string;
   note: string;
@@ -115,6 +119,7 @@ export type OptionJson = {
     day: number;
     date: string;
     time: string;
+    duration?: number;
     category: CatKey;
     title: string;
     note: string;

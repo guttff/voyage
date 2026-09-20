@@ -1,5 +1,5 @@
 import { ALIAS, CATS } from './constants';
-import { addDays, diffDays, fmt2, shortY, uid } from './format';
+import { addDays, diffDays, fmt2, parseDuration, parseTime, shortY, uid } from './format';
 import type { CatKey, Item, Option, OptionJson, Vacation } from './types';
 
 export function toOptionJson(v: Vacation, o: Option): OptionJson {
@@ -15,6 +15,7 @@ export function toOptionJson(v: Vacation, o: Option): OptionJson {
       day: diffDays(v.start, i.date) + 1,
       date: i.date,
       time: i.time || '',
+      duration: i.duration,
       category: i.cat,
       title: i.title,
       note: i.note || '',
@@ -91,7 +92,8 @@ export function parseImport(text: string, v: Vacation): ImportResult {
       return {
         id: uid(),
         date,
-        time: str(x.time),
+        time: parseTime(x.time),
+        duration: parseDuration(x.duration ?? x.durationMinutes ?? x.length),
         cat,
         title: str(x.title) || str(x.name),
         note: str(x.note) || str(x.description),
@@ -130,6 +132,7 @@ export function chatPrompt(v: Vacation): string {
       {
         day: 1,
         time: '07:15',
+        duration: 120,
         category: 'flight|hotel|transport|food|activity',
         title: 'string',
         note: 'string',
@@ -137,5 +140,5 @@ export function chatPrompt(v: Vacation): string {
       },
     ],
   });
-  return `Plan a ${nDays}-day trip to ${v.name} for two adults, ${shortY(v.start)} to ${shortY(v.end)}. Include flights, lodging, transport, notable meals and activities with realistic USD costs for both people combined. Return ONLY JSON in this exact shape (day 1 = ${shortY(v.start)}): ${schema}`;
+  return `Plan a ${nDays}-day trip to ${v.name} for two adults, ${shortY(v.start)} to ${shortY(v.end)}. Include flights, lodging, transport, notable meals and activities with realistic USD costs for both people combined. Give timed items a start time and a duration in minutes. Return ONLY JSON in this exact shape (day 1 = ${shortY(v.start)}): ${schema}`;
 }

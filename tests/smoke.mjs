@@ -203,6 +203,45 @@ await step('the grip moves an item with the keyboard', async () => {
   if (before === after) throw new Error('ArrowDown did nothing');
 });
 
+await step('time rail shows 12-hour time, and duration only when set', async () => {
+  // Seed items are timed, so the rail is reserved for the whole plan.
+  if (!(await page.locator('.day-items.has-rail').count())) throw new Error('rail not reserved');
+  const flight = page.locator('.item', { hasText: 'Flight FLL' }).first();
+  if ((await flight.locator('.item-when .at').innerText()) !== '7:15 AM')
+    throw new Error('time not 12-hour: ' + (await flight.locator('.item-when .at').innerText()));
+  // No duration on the seed data — nothing should be rendered for it.
+  if (await flight.locator('.item-when .for').count()) throw new Error('empty duration rendered');
+  // The rail is its own column, left of the category icon.
+  const when = await flight.locator('.item-when').boundingBox();
+  const icon = await flight.locator('.item-cat').boundingBox();
+  if (when.x + when.width > icon.x + 1) throw new Error('rail is not left of the icon');
+  // Untimed rows keep the column so the icons stay aligned.
+  const uber = page.locator('.item', { hasText: 'Uber Liberia' }).first();
+  const uberIcon = await uber.locator('.item-cat').boundingBox();
+  if (Math.abs(uberIcon.x - icon.x) > 1) throw new Error('icons not aligned across rows');
+});
+
+await step('a duration set in the editor shows on the rail', async () => {
+  const row = page.locator('.item', { hasText: 'Flight FLL' }).first();
+  await row.hover();
+  await row.locator('button[title="Edit"]').click();
+  await page.waitForSelector('.dialog');
+  await page.selectOption('#it-dur', '90');
+  await page.click('.dialog-ft button:has-text("Save changes")');
+  await page.waitForTimeout(200);
+  const txt = await page.locator('.item', { hasText: 'Flight FLL' }).first().locator('.item-when').innerText();
+  if (!txt.includes('1 hr 30 min')) throw new Error('duration not shown: ' + txt);
+  // …and clearing it removes the line entirely.
+  await row.hover();
+  await row.locator('button[title="Edit"]').click();
+  await page.waitForSelector('.dialog');
+  await page.selectOption('#it-dur', '');
+  await page.click('.dialog-ft button:has-text("Save changes")');
+  await page.waitForTimeout(200);
+  if (await page.locator('.item', { hasText: 'Flight FLL' }).first().locator('.item-when .for').count())
+    throw new Error('cleared duration still rendered');
+});
+
 await step('copy it into Final and keep provenance', async () => {
   const row = page.locator('.item', { hasText: 'Coffee farm tour' }).first();
   await row.hover();
@@ -249,7 +288,7 @@ await step('export round-trips through import', async () => {
   if (parsed.schema !== 'voyage.option.v1' || parsed.items.length !== 5) throw new Error('bad export');
 
   await page.fill('#imp-json', JSON.stringify({ name: 'ChatGPT draft', author: 'ChatGPT', items: [
-    { day: 1, category: 'Lodging', title: 'Boutique hotel', cost: '$1,200' },
+    { day: 1, category: 'Lodging', title: 'Boutique hotel', cost: '$1,200', time: '5:00 AM', duration: '2 hrs' },
     { day: 99, category: 'zzz', title: 'Out of range thing', price: 40 },
   ]}));
   await page.waitForSelector('text=2 items');
@@ -260,6 +299,10 @@ await step('export round-trips through import', async () => {
   await page.click('button:has-text("Import 2 items")');
   await page.waitForSelector('text=Boutique hotel');
   if (!(await page.textContent('body')).includes('ChatGPT draft')) throw new Error('option not named from JSON');
+  // "5:00 AM" and "2 hrs" are normalised on the way in.
+  const rail = await page.locator('.item', { hasText: 'Boutique hotel' }).first().locator('.item-when').innerText();
+  if (!rail.includes('5:00 AM')) throw new Error('12-hour time not parsed: ' + rail);
+  if (!rail.includes('2 hrs')) throw new Error('duration not parsed: ' + rail);
 });
 
 await step('bad JSON reports an error, import stays disabled', async () => {

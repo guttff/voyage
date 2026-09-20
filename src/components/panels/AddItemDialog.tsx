@@ -3,11 +3,14 @@ import { Dialog } from '../Dialog';
 import { Icon } from '../Icon';
 import { useToast } from '../ui/Toast';
 import { CATS, CAT_KEYS } from '../../lib/constants';
-import { addDays, dayLabel, diffDays, uid } from '../../lib/format';
+import { addDays, dayLabel, diffDays, durationLabel, uid } from '../../lib/format';
 import { placeInDay } from '../../lib/order';
 import { useStore } from '../../state/store';
 import { useUi } from '../../state/ui';
 import type { CatKey, ItemForm, Vacation } from '../../lib/types';
+
+/** Common lengths; an imported value outside the list is kept as its own option. */
+const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240, 300, 360, 480, 600];
 
 type Props = {
   vac: Vacation;
@@ -33,12 +36,13 @@ export function AddItemDialog({ vac, optId, editId, date }: Props) {
       ? {
           date: editing.date,
           time: editing.time || '',
+          duration: editing.duration ? String(editing.duration) : '',
           cat: editing.cat,
           title: editing.title,
           note: editing.note || '',
           cost: String(editing.cost),
         }
-      : { date: clamp(date), time: '', cat: ui.lastCat, title: '', note: '', cost: '' },
+      : { date: clamp(date), time: '', duration: '', cat: ui.lastCat, title: '', note: '', cost: '' },
   );
 
   const set = <K extends keyof ItemForm>(k: K, v: ItemForm[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -50,6 +54,7 @@ export function AddItemDialog({ vac, optId, editId, date }: Props) {
     const base = {
       date: form.date,
       time: form.time,
+      duration: Number(form.duration) || undefined,
       cat: form.cat,
       title: form.title.trim(),
       note: form.note.trim(),
@@ -125,7 +130,7 @@ export function AddItemDialog({ vac, optId, editId, date }: Props) {
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 'var(--s3)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 'var(--s3)' }}>
           <div className="field">
             <label htmlFor="it-day">Day</label>
             <select id="it-day" className="input" value={form.date} onChange={(e) => set('date', e.target.value)}>
@@ -142,6 +147,20 @@ export function AddItemDialog({ vac, optId, editId, date }: Props) {
           <div className="field">
             <label htmlFor="it-time">Time</label>
             <input id="it-time" className="input" type="time" value={form.time} onChange={(e) => set('time', e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="it-dur">Duration</label>
+            <select id="it-dur" className="input" value={form.duration} onChange={(e) => set('duration', e.target.value)}>
+              <option value="">—</option>
+              {DURATIONS.map((d) => (
+                <option key={d} value={String(d)}>
+                  {durationLabel(d)}
+                </option>
+              ))}
+              {form.duration && !DURATIONS.includes(Number(form.duration)) && (
+                <option value={form.duration}>{durationLabel(Number(form.duration))}</option>
+              )}
+            </select>
           </div>
           <div className="field">
             <label htmlFor="it-cost">Cost (USD)</label>
