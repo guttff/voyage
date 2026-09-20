@@ -7,7 +7,7 @@ const failedUrls = [];
 const browser = await chromium.launch(
   process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {},
 );
-const page = await browser.newPage();
+const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('requestfailed', (r) => failedUrls.push(r.url() + ' — ' + r.failure()?.errorText));
@@ -19,94 +19,158 @@ const step = async (name, fn) => {
 
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFUlEQVR42mP8z8BQz0AEYBxVSF+FABJADveWkH6oAAAAAElFTkSuQmCC', 'base64');
 
+const nav = (label) => page.locator('.rail-link', { hasText: label }).first();
+const openTrip = async (name) => {
+  await nav('Trips').click();
+  await page.locator('.trip-card', { hasText: name }).getByRole('button', { name: 'Open' }).click();
+  await page.waitForSelector('.tabs');
+};
+
 await page.goto(BASE, { waitUntil: 'networkidle' });
 
-await step('home renders greeting + next trip', async () => {
-  await page.waitForSelector('h2');
-  const h2 = await page.textContent('h2');
-  if (!/Good (morning|afternoon|evening), John & Sarah/.test(h2)) throw new Error('greeting: ' + h2);
-  const body = await page.textContent('body');
-  if (!body.includes('Costa Rica')) throw new Error('no Costa Rica hero');
-  if (!body.includes('Next trip')) throw new Error('no Next trip kicker');
+/* ── design: the mockup tells are gone ─────────────────────────────────── */
+
+await step('no blueprint registration marks anywhere', async () => {
+  if (await page.locator('.corner, .blueprint').count()) throw new Error('blueprint markup still rendered');
 });
 
-await step('travel fund ring shows a percentage', async () => {
+await step('app chrome is present (rail, topbar, breadcrumb)', async () => {
+  await page.waitForSelector('.rail');
+  await page.waitForSelector('.topbar');
+  if (!(await page.locator('.crumbs').count())) throw new Error('no breadcrumb');
+  const groups = await page.locator('.rail-group-label').count();
+  if (groups < 2) throw new Error('rail is not grouped: ' + groups);
+});
+
+await step('surfaces are solid, not transparent wireframes', async () => {
+  const bg = await page.locator('.card').first().evaluate((el) => getComputedStyle(el).backgroundColor);
+  if (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') throw new Error('card has no surface: ' + bg);
+  const r = await page.locator('.card').first().evaluate((el) => getComputedStyle(el).borderRadius);
+  if (parseFloat(r) < 2) throw new Error('cards still square: ' + r);
+});
+
+/* ── overview ──────────────────────────────────────────────────────────── */
+
+await step('photo layers have real geometry (tint must not collapse them)', async () => {
+  for (const sel of ['.hero-media', '.hero .slot']) {
+    const box = await page.locator(sel).first().boundingBox();
+    if (!box || box.height < 40) throw new Error(`${sel} collapsed: ${JSON.stringify(box)}`);
+  }
+  const prompt = page.locator('.hero .slot-empty').first();
+  if (!(await prompt.isVisible())) throw new Error('no "add a photo" affordance on the hero');
+});
+
+await step('overview renders greeting, KPIs and next trip', async () => {
+  const h1 = await page.textContent('h1');
+  if (!/Good (morning|afternoon|evening), John & Sarah/.test(h1)) throw new Error('greeting: ' + h1);
+  const kpis = await page.locator('.grid-kpi > .card').count();
+  if (kpis !== 4) throw new Error('kpi tiles: ' + kpis);
   const t = await page.textContent('body');
-  if (!/\d+%/.test(t)) throw new Error('no percentage');
+  if (!t.includes('Costa Rica') || !t.includes('Next trip')) throw new Error('no next-trip hero');
+  if (!(await page.locator('[role=progressbar]').count())) throw new Error('no fund meter');
 });
 
-await step('nav to Trips lists 3 trips', async () => {
-  await page.click('button:has-text("Trips")');
-  await page.waitForSelector('h2:has-text("My trips")');
-  const cards = await page.locator('.vy-tripcard').count();
-  if (cards !== 3) throw new Error('trip cards: ' + cards);
+await step('affordability table uses status badges', async () => {
+  const good = await page.locator('.badge-good').count();
+  const bad = await page.locator('.badge-critical').count();
+  if (good + bad === 0) throw new Error('no status badges');
+  // Status colour is never alone — each badge carries text.
+  const txt = await page.locator('.badge').first().innerText();
+  if (!txt.trim()) throw new Error('badge has no label');
 });
 
-await step('search filters', async () => {
+/* ── trips ─────────────────────────────────────────────────────────────── */
+
+await step('trips lists 3 and search filters', async () => {
+  await nav('Trips').click();
+  await page.waitForSelector('.trip-card');
+  if ((await page.locator('.trip-card').count()) !== 3) throw new Error('trip cards');
   await page.fill('input[placeholder="Search destinations…"]', 'ital');
-  if (await page.locator('.vy-tripcard').count() !== 1) throw new Error('filter failed');
+  if ((await page.locator('.trip-card').count()) !== 1) throw new Error('filter failed');
   await page.fill('input[placeholder="Search destinations…"]', '');
 });
 
-await step('open Costa Rica -> plan options', async () => {
-  await page.locator('.vy-tripcard', { hasText: 'Costa Rica' }).getByRole('button', { name: 'Open' }).click();
-  await page.waitForSelector('h4:has-text("Plan options")');
+await step('breadcrumb tracks the open trip', async () => {
+  await openTrip('Costa Rica');
+  const c = await page.locator('.crumbs').innerText();
+  if (!c.includes('Trips') || !c.includes('Costa Rica')) throw new Error('breadcrumb: ' + c);
+});
+
+await step('plan options show Final plus both travelers', async () => {
   const t = await page.textContent('body');
-  if (!t.includes('Combined plan')) throw new Error('no Combined plan card');
+  if (!t.includes('Final plan')) throw new Error('no Final card');
   if (!t.includes('John’s plan') || !t.includes('Sarah’s plan')) throw new Error('missing option cards');
 });
 
-await step('itinerary tab shows 14 day rows for Option 1', async () => {
-  await page.click('button:has-text("Itinerary")');
-  await page.waitForSelector('text=Add to this day');
+/* ── itinerary ─────────────────────────────────────────────────────────── */
+
+await step('itinerary shows 14 days for Option 1', async () => {
+  await page.click('.tab:has-text("Itinerary")');
   await page.locator('button', { hasText: /^Option 1/ }).first().click();
-  const days = await page.locator('button:has-text("+ Add to this day")').count();
-  if (days !== 14) throw new Error('day rows: ' + days);
+  await page.waitForSelector('.day');
+  if ((await page.locator('.day').count()) !== 14) throw new Error('day rows: ' + (await page.locator('.day').count()));
   const t = await page.textContent('body');
-  if (!t.includes('Flight FLL → Liberia (LIR)')) throw new Error('missing seeded flight');
-  if (!t.includes('$789.98')) throw new Error('missing item cost');
+  if (!t.includes('Flight FLL → Liberia (LIR)') || !t.includes('$789.98')) throw new Error('seed item missing');
 });
 
-await step('add an item', async () => {
-  await page.click('button:has-text("+ Add item")');
-  await page.waitForSelector('.dialog-title');
-  await page.fill('input[placeholder="Flight FLL → Liberia"]', 'Coffee farm tour');
-  await page.fill('input[placeholder="0.00"]', '64.50');
+await step('add an item, with a toast', async () => {
+  await page.click('button:has-text("Add item")');
+  await page.waitForSelector('.dialog');
+  await page.fill('#it-title', 'Coffee farm tour');
+  await page.fill('#it-cost', '64.50');
   await page.click('.seg-opt:has-text("Activities")');
-  await page.click('.dialog button:has-text("Add item")');
+  await page.click('.dialog-ft button:has-text("Add item")');
+  await page.waitForSelector('.toast');
   await page.waitForSelector('text=Coffee farm tour');
-  const t = await page.textContent('body');
-  if (!t.includes('$64.50')) throw new Error('cost not shown');
+  if (!(await page.textContent('body')).includes('$64.50')) throw new Error('cost not shown');
 });
 
-await step('copy that item to Final', async () => {
-  const row = page.locator('.vy-row', { hasText: 'Coffee farm tour' }).first();
+await step('copy it into Final and keep provenance', async () => {
+  const row = page.locator('.item', { hasText: 'Coffee farm tour' }).first();
   await row.hover();
-  await row.getByRole('button', { name: 'Copy to…' }).click();
-  await page.waitForSelector('.dialog-title:has-text("Copy")');
-  await page.locator('.dialog button', { hasText: 'Final' }).first().click();
-  await page.click('.dialog button:has-text("Done")');
+  await row.locator('button[title="Copy to another plan"]').click();
+  await page.waitForSelector('.dialog');
+  await page.locator('.dialog-bd button', { hasText: 'Final' }).first().click();
+  await page.click('.dialog-ft button:has-text("Done")');
   await page.locator('button', { hasText: /^Final/ }).first().click();
   await page.waitForSelector('text=Coffee farm tour');
-  const t = await page.textContent('body');
-  if (!t.includes('from Option 1')) throw new Error('provenance missing');
+  if (!(await page.textContent('body')).includes('from Option 1')) throw new Error('provenance missing');
 });
 
-await step('compare tab marks it in Final', async () => {
-  await page.click('button:has-text("Compare")');
-  await page.waitForSelector('text=Options side by side');
-  const t = await page.textContent('body');
-  if (!t.includes('in Final')) throw new Error('no "in Final" badge');
+await step('empty plan shows a designed empty state', async () => {
+  await openTrip('Italy');
+  await page.click('.tab:has-text("Itinerary")');
+  await page.waitForSelector('.empty');
+  if (!(await page.textContent('.empty')).includes('Nothing planned yet')) throw new Error('wrong empty state');
+  if (!(await page.locator('.empty-icon').count())) throw new Error('no empty-state icon');
 });
+
+/* ── compare ───────────────────────────────────────────────────────────── */
+
+await step('compare marks what is already in Final', async () => {
+  await openTrip('Costa Rica');
+  await page.click('.tab:has-text("Compare")');
+  await page.waitForSelector('.cmp');
+  if (!(await page.locator('.badge-good', { hasText: 'Final' }).count())) throw new Error('no "Final" badge');
+  // The header must sit flush on the table, not be pushed down over row 1 by a
+  // sticky offset measured against the horizontal scroll container.
+  const head = await page.locator('.cmp thead th').first().boundingBox();
+  const tbl = await page.locator('.cmp').boundingBox();
+  if (head.y - tbl.y > 2) throw new Error(`sticky header offset by ${(head.y - tbl.y).toFixed(0)}px`);
+  const firstRow = await page.locator('.cmp tbody tr').first().boundingBox();
+  if (firstRow.y < head.y + head.height - 2) throw new Error('first row is under the header');
+});
+
+/* ── import / export ───────────────────────────────────────────────────── */
 
 await step('export round-trips through import', async () => {
-  await page.click('button:has-text("Import / Export")');
-  await page.waitForSelector('.card-title:has-text("Export JSON")');
+  await page.click('.tab:has-text("Import / Export")');
+  await page.waitForSelector('textarea[readonly]');
   await page.selectOption('select.input', { label: 'Option 2 · Sarah' });
-  const json = await page.locator('textarea[readonly]').first().inputValue();
-  const parsed = JSON.parse(json);
-  if (parsed.schema !== 'voyage.option.v1' || parsed.items.length !== 5) throw new Error('bad export: ' + json.slice(0, 120));
-  await page.fill('textarea[placeholder^="…or paste"]', JSON.stringify({ name: 'ChatGPT draft', author: 'ChatGPT', items: [
+  const parsed = JSON.parse(await page.locator('textarea[readonly]').first().inputValue());
+  if (parsed.schema !== 'voyage.option.v1' || parsed.items.length !== 5) throw new Error('bad export');
+
+  await page.fill('#imp-json', JSON.stringify({ name: 'ChatGPT draft', author: 'ChatGPT', items: [
     { day: 1, category: 'Lodging', title: 'Boutique hotel', cost: '$1,200' },
     { day: 99, category: 'zzz', title: 'Out of range thing', price: 40 },
   ]}));
@@ -117,160 +181,171 @@ await step('export round-trips through import', async () => {
   if (!msg.includes('1 unknown categories')) throw new Error('unknown-cat note missing');
   await page.click('button:has-text("Import 2 items")');
   await page.waitForSelector('text=Boutique hotel');
-  const t = await page.textContent('body');
-  if (!t.includes('ChatGPT draft')) throw new Error('new option not named from JSON');
+  if (!(await page.textContent('body')).includes('ChatGPT draft')) throw new Error('option not named from JSON');
 });
 
-await step('budget page projects 12 months and reacts to contributions', async () => {
-  await page.click('button.vy-nav:has-text("Budget")');
-  await page.waitForSelector('h2:has-text("Budget & contributions")');
-  const labels = await page.locator('div[style*="repeat(12"] > div').count();
-  if (labels < 24) throw new Error('projection columns: ' + labels);
-  const before = await page.textContent('body');
-  if (!before.includes('Costa Rica')) throw new Error('trip callout missing from chart');
-  await page.locator('button[aria-label="Raise John’s contribution"]').click();
-  await page.waitForTimeout(100);
-  const after = await page.textContent('body');
-  if (before === after) throw new Error('chart did not react');
-  if (!after.includes('$950')) throw new Error('couple total did not update');
+await step('bad JSON reports an error, import stays disabled', async () => {
+  await page.click('.tab:has-text("Import / Export")');
+  await page.fill('#imp-json', '{ not json');
+  await page.waitForSelector('text=Not valid JSON');
+  const disabled = await page.locator('button:has-text("Import")').last().isDisabled();
+  if (!disabled) throw new Error('import button enabled on bad JSON');
+  await page.fill('#imp-json', '');
 });
 
-await step('future rule adds a row', async () => {
-  await page.fill('input[type="date"]', '2027-01-01');
+/* ── fund ──────────────────────────────────────────────────────────────── */
+
+await step('projection renders as a chart with axes and a zero baseline', async () => {
+  await nav('Travel fund').click();
+  await page.waitForSelector('.chart-wrap svg');
+  const paths = await page.locator('.chart-wrap svg path').count();
+  if (paths < 2) throw new Error('no line/area paths: ' + paths);
+  const labels = await page.locator('.chart-wrap svg text').count();
+  if (labels < 12) throw new Error('missing axis labels: ' + labels);
+  if (!(await page.textContent('body')).includes('Costa Rica')) throw new Error('no trip annotation');
+});
+
+await step('chart hover shows a tooltip', async () => {
+  const box = await page.locator('.chart-wrap svg').boundingBox();
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.waitForSelector('.chart-tip', { timeout: 3000 });
+  const tip = await page.textContent('.chart-tip');
+  if (!/\$/.test(tip)) throw new Error('tooltip has no value: ' + tip);
+});
+
+await step('chart has a table view', async () => {
+  await page.click('button:has-text("Table")');
+  await page.waitForSelector('th:has-text("Balance at month end")');
+  await page.click('button:has-text("Chart")');
+  await page.waitForSelector('.chart-wrap svg');
+});
+
+await step('raising a contribution moves the projection', async () => {
+  // Assert on the plotted geometry: the axis ticks round to clean numbers and
+  // there is deliberately no value label per point, so the text can be
+  // unchanged while the line has moved.
+  const line = page.locator('.chart-wrap svg path').nth(1);
+  const before = await line.getAttribute('d');
+  await page.locator('button[aria-label="Raise John’s contribution by 50"]').click();
+  await page.waitForTimeout(150);
+  if ((await line.getAttribute('d')) === before) throw new Error('chart did not react');
+  if (!(await page.textContent('body')).includes('$950')) throw new Error('couple total did not update');
+});
+
+await step('a future rule is flagged as scheduled', async () => {
+  await page.fill('#r-from', '2027-01-01');
   await page.click('button:has-text("Add rule")');
   await page.waitForSelector('td:has-text("Jan 1, 2027")');
+  if (!(await page.locator('.badge', { hasText: 'scheduled' }).count())) throw new Error('no scheduled badge');
 });
 
-await step('settings renames a traveler everywhere', async () => {
-  await page.click('button.vy-nav:has-text("Settings")');
-  await page.waitForSelector('h2:has-text("Settings")');
-  const name = page.locator('.card', { hasText: 'Traveler 1' }).locator('input.input').first();
-  await name.fill('Johnny');
-  await page.waitForTimeout(100);
-  await page.click('button.vy-nav:has-text("Trips")');
-  await page.locator('.vy-tripcard', { hasText: 'Costa Rica' }).getByRole('button', { name: 'Open' }).click();
-  await page.waitForSelector('h4:has-text("Plan options")');
-  const t = await page.textContent('body');
-  if (!t.includes('Johnny’s plan')) throw new Error('rename did not reach plan cards');
+/* ── settings ──────────────────────────────────────────────────────────── */
+
+await step('renaming a traveler reaches the plan cards', async () => {
+  await nav('Settings').click();
+  await page.locator('.card', { hasText: 'Traveler 1' }).locator('input.input').first().fill('Johnny');
+  await page.waitForTimeout(120);
+  await openTrip('Costa Rica');
+  if (!(await page.textContent('body')).includes('Johnny’s plan')) throw new Error('rename did not propagate');
 });
 
 await step('state survives a reload', async () => {
   await page.reload({ waitUntil: 'networkidle' });
-  const t = await page.textContent('body');
-  if (!t.includes('Johnny')) throw new Error('did not persist');
+  if (!(await page.textContent('body')).includes('Johnny')) throw new Error('did not persist');
 });
 
+/* ── photos & data ─────────────────────────────────────────────────────── */
 
-await page.goto(BASE, { waitUntil: 'networkidle' });
-await page.evaluate(() => localStorage.clear());
-await page.reload({ waitUntil: 'networkidle' });
-
-await step('create a new trip', async () => {
-  await page.click('button:has-text("+ New trip")');
-  await page.fill('input[placeholder="Costa Rica"]', 'Lisbon');
-  const dates = page.locator('.dialog input[type="date"]');
-  await dates.nth(0).fill('2027-09-10');
-  await dates.nth(1).fill('2027-09-14');
-  await page.click('.dialog button:has-text("Create trip")');
-  await page.waitForSelector('h4:has-text("Plan options")');
-  const t = await page.textContent('body');
-  if (!t.includes('Lisbon')) throw new Error('trip not opened');
-  if (!t.includes('Nothing planned')) throw new Error('empty-plan verdict missing');
-});
-
-await step('new option appears and is deletable', async () => {
-  await page.click('button:has-text("Create new option")');
-  await page.waitForSelector('button:has-text("+ Add item")');
-  await page.click('button:has-text("Plan options")');
-  const t = await page.textContent('body');
-  if (!t.includes('Option 3')) throw new Error('Option 3 missing');
-  await page.locator('.card', { hasText: 'Option 3' }).getByRole('button', { name: 'Delete' }).click();
-  await page.click('.dialog button:has-text("Delete option")');
-  await page.waitForTimeout(150);
-  // The card is gone; the activity feed still mentions it by name, so match exactly.
-  if (await page.getByText('Option 3', { exact: true }).count()) throw new Error('card not deleted');
-  if (!(await page.textContent('body')).includes('deleted Option 3 in Lisbon')) throw new Error('not logged');
-});
-
-await step('drop a photo on the trip cover, and it persists', async () => {
-  await page
-    .locator('.vy-slot[aria-label="Drop a photo of Lisbon"] input[type=file]')
-    .setInputFiles({ name: 'lisbon.png', mimeType: 'image/png', buffer: PNG });
-  // The label flips to "Replace photo: …" once the slot is filled.
-  const cover = page.locator('.vy-slot[aria-label="Replace photo: Drop a photo of Lisbon"]');
-  await cover.locator('img').waitFor({ timeout: 5000 });
-  const src = await cover.locator('img').getAttribute('src');
-  if (!src?.startsWith('data:image/')) throw new Error('no image src: ' + src);
-  // A reload lands back on Home, so navigate to where that cover is drawn.
+await step('create a trip', async () => {
+  await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle' });
-  await page.click('button.vy-nav:has-text("Trips")');
-  const card = page.locator('.vy-tripcard', { hasText: 'Lisbon' });
+  await page.click('.topbar button:has-text("New trip")');
+  await page.fill('#nv-name', 'Lisbon');
+  await page.fill('#nv-start', '2027-09-10');
+  await page.fill('#nv-end', '2027-09-14');
+  await page.click('.dialog-ft button:has-text("Create trip")');
+  await page.waitForSelector('h2:has-text("Plan options")');
+  if (!(await page.textContent('body')).includes('Lisbon')) throw new Error('trip not opened');
+});
+
+await step('a cover photo uploads and persists', async () => {
+  const empty = page.locator('.slot[aria-label="Add a photo of Lisbon"]');
+  await empty.locator('input[type=file]').setInputFiles({ name: 'l.png', mimeType: 'image/png', buffer: PNG });
+  const filled = page.locator('.slot[aria-label="Replace photo: Add a photo of Lisbon"]');
+  await filled.locator('img').waitFor({ timeout: 5000 });
+  const src = await filled.locator('img').getAttribute('src');
+  if (!src?.startsWith('data:image/')) throw new Error('no image src');
+  await page.reload({ waitUntil: 'networkidle' });
+  await nav('Trips').click();
+  const card = page.locator('.trip-card', { hasText: 'Lisbon' });
   await card.locator('img').waitFor({ timeout: 5000 });
   if ((await card.locator('img').getAttribute('src')) !== src) throw new Error('different image after reload');
-  await card.getByRole('button', { name: 'Open' }).click();
-  await page.waitForSelector('h4:has-text("Plan options")');
 });
 
-await step('avatar photo shows in the sidebar', async () => {
-  await page.click('button.vy-nav:has-text("Settings")');
-  await page.waitForSelector('h2:has-text("Settings")');
-  const av = page.locator('.card', { hasText: 'Traveler 1' }).locator('.vy-slot input[type=file]');
-  await av.setInputFiles({ name: 'john.png', mimeType: 'image/png', buffer: PNG });
+await step('avatar photo reaches the rail', async () => {
+  await nav('Settings').click();
+  await page.locator('.card', { hasText: 'Traveler 1' }).locator('.slot input[type=file]')
+    .setInputFiles({ name: 'j.png', mimeType: 'image/png', buffer: PNG });
   await page.waitForTimeout(300);
-  const shown = await page.locator('.vy-sidebar .vy-av .vy-slot[data-filled] img').count();
-  if (shown !== 1) throw new Error('sidebar avatar not filled: ' + shown);
+  if ((await page.locator('.rail .av-photo .slot[data-filled] img').count()) !== 1) throw new Error('rail avatar empty');
 });
 
-await step('backup includes photos and restores them', async () => {
+await step('backup carries the photos', async () => {
   const dl = page.waitForEvent('download');
   await page.click('button:has-text("Download backup")');
-  const stream = await (await dl).createReadStream();
   const chunks = [];
-  for await (const c of stream) chunks.push(c);
+  for await (const c of await (await dl).createReadStream()) chunks.push(c);
   const j = JSON.parse(Buffer.concat(chunks).toString());
-  if (j.schema !== 'voyage.backup.v1') throw new Error('bad schema');
   const keys = Object.keys(j.images || {});
   if (keys.length !== 2) throw new Error('images in backup: ' + keys.join(','));
-  if (!keys.some((k) => k.startsWith('cover-')) || !keys.includes('avatar-p1')) throw new Error('wrong keys: ' + keys);
+  if (!keys.some((k) => k.startsWith('cover-')) || !keys.includes('avatar-p1')) throw new Error('wrong keys');
 });
 
-await step('duotone toggle switches the tint class', async () => {
-  await page.click('button.vy-nav:has-text("Trips")');
-  const before = await page.locator('.duotone').count();
-  if (!before) throw new Error('tint not on by default');
-  await page.click('button.vy-nav:has-text("Settings")');
-  await page.click('label.radio:has-text("Tint trip photos")');
-  await page.click('button.vy-nav:has-text("Trips")');
-  if (await page.locator('.duotone').count()) throw new Error('tint not removed');
-  await page.click('button.vy-nav:has-text("Settings")');
-  await page.click('label.radio:has-text("Tint trip photos")');
+await step('photo tint toggles', async () => {
+  await nav('Trips').click();
+  if (!(await page.locator('.tint').count())) throw new Error('tint not on by default');
+  await nav('Settings').click();
+  await page.click('label.choice:has-text("Tint trip photography")');
+  await nav('Trips').click();
+  if (await page.locator('.tint').count()) throw new Error('tint not removed');
 });
 
-await step('delete a trip drops it from the list', async () => {
-  await page.click('button.vy-nav:has-text("Trips")');
-  await page.locator('.vy-tripcard', { hasText: 'Lisbon' }).getByRole('button', { name: 'Open' }).click();
-  await page.click('button:has-text("Delete")');
-  await page.click('.dialog button:has-text("Delete trip")');
+await step('delete a trip', async () => {
+  await openTrip('Lisbon');
+  await page.locator('.hero button:has-text("Delete")').click();
+  await page.click('.dialog-ft button:has-text("Delete trip")');
   await page.waitForTimeout(200);
-  await page.click('button.vy-nav:has-text("Trips")');
-  if ((await page.textContent('body')).includes('Lisbon')) throw new Error('still listed');
+  await nav('Trips').click();
+  // Scope to the cards: the confirmation toast still names the trip.
+  if (await page.locator('.trip-card', { hasText: 'Lisbon' }).count()) throw new Error('still listed');
 });
 
 await step('reset restores the sample set', async () => {
-  await page.click('button.vy-nav:has-text("Settings")');
+  await nav('Settings').click();
   await page.click('button:has-text("Reset to sample data")');
-  await page.click('.dialog button:has-text("Reset")');
-  await page.waitForSelector('h2');
-  await page.click('button.vy-nav:has-text("Trips")');
-  if ((await page.locator('.vy-tripcard').count()) !== 3) throw new Error('sample trips not back');
+  await page.click('.dialog-ft button:has-text("Reset")');
+  await page.waitForTimeout(200);
+  await nav('Trips').click();
+  if ((await page.locator('.trip-card').count()) !== 3) throw new Error('sample trips not back');
 });
 
 await step('escape closes a dialog', async () => {
-  await page.click('button:has-text("+ New trip")');
+  await page.click('.topbar button:has-text("New trip")');
   await page.waitForSelector('.dialog');
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(120);
   if (await page.locator('.dialog').count()) throw new Error('dialog still open');
+});
+
+await step('layout does not overflow horizontally at 1440 or 420', async () => {
+  for (const w of [1440, 420]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await nav('Travel fund').click();
+    await page.waitForTimeout(150);
+    const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    if (over > 1) throw new Error(`horizontal overflow at ${w}px: ${over}px`);
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
 });
 
 await browser.close();

@@ -1,13 +1,14 @@
-import { Fragment } from 'react';
-import { Corners } from '../../components/Blueprint';
 import { Icon } from '../../components/Icon';
+import { Badge } from '../../components/ui/Badge';
+import { useToast } from '../../components/ui/Toast';
 import { CATS, total } from '../../lib/constants';
-import { addDays, dayLabel, diffDays, fmt, uid } from '../../lib/format';
+import { addDays, dayLabel, diffDays, fmt, short, uid } from '../../lib/format';
 import { useStore } from '../../state/store';
 import type { Item, Vacation } from '../../lib/types';
 
 export function CompareTab({ vac }: { vac: Vacation }) {
   const { updOpt, log, me } = useStore();
+  const toast = useToast();
   const nDays = diffDays(vac.start, vac.end) + 1;
 
   const finalItems = vac.options[0].items;
@@ -17,149 +18,103 @@ export function CompareTab({ vac }: { vac: Vacation }) {
   const toFinal = (i: Item, fromName: string) => {
     updOpt(vac.id, 'final', (f) => ({ ...f, items: [...f.items, { ...i, id: uid(), from: fromName }] }));
     log(`${me.name} copied “${i.title}” to Final`);
+    toast(`“${i.title}” added to Final`, 'good');
   };
 
   return (
     <>
-      <div className="text-muted" style={{ fontSize: 13 }}>
-        Options side by side, aligned by day. Hover an item to send it to Final.
-      </div>
-      <div className="blueprint" style={{ overflowX: 'auto' }}>
-        <Corners />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `120px repeat(${vac.options.length}, minmax(0,1fr))`,
-            minWidth: 700,
-          }}
-        >
-          <div
-            style={{
-              padding: '10px 12px',
-              borderBottom: '1px solid var(--color-divider)',
-              fontSize: 10,
-              letterSpacing: '.1em',
-              textTransform: 'uppercase',
-              color: 'var(--color-neutral-700)',
-              alignSelf: 'end',
-            }}
-          >
-            Day
-          </div>
-          {vac.options.map((op) => (
-            <div
-              key={op.id}
-              style={{
-                padding: '10px 12px',
-                borderBottom: '1px solid var(--color-divider)',
-                borderLeft: '1px solid var(--color-divider)',
-                background: op.final ? 'var(--color-accent-100)' : 'transparent',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-                gap: 8,
-              }}
-            >
-              <div>
-                <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 18, lineHeight: 1 }}>
-                  {op.name}
-                </div>
-                <div className="text-muted" style={{ fontSize: 11 }}>
-                  {op.final ? 'merged' : op.author}
-                </div>
-              </div>
-              <div style={{ fontWeight: 700 }}>{fmt(total(op))}</div>
-            </div>
-          ))}
-
-          {Array.from({ length: nDays }, (_, k) => {
-            const date = addDays(vac.start, k);
-            return (
-              <Fragment key={date}>
-                <div
-                  style={{
-                    padding: '10px 12px',
-                    borderBottom: '1px solid color-mix(in srgb,var(--color-text) 8%,transparent)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 15 }}>Day {k + 1}</span>
-                  <span className="text-muted" style={{ fontSize: 11 }}>
-                    {dayLabel(date)}
-                  </span>
-                </div>
-                {vac.options.map((op) => (
-                  <div
-                    key={op.id}
-                    style={{
-                      padding: '6px 8px',
-                      borderLeft: '1px solid var(--color-divider)',
-                      borderBottom: '1px solid color-mix(in srgb,var(--color-text) 8%,transparent)',
-                      background: op.final ? 'color-mix(in srgb,var(--color-accent-100) 50%,transparent)' : 'transparent',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                    }}
-                  >
-                    {op.items
-                      .filter((i) => i.date === date)
-                      .map((i) => {
-                        const already = inFinal(i);
-                        return (
-                          <div
-                            key={i.id}
-                            className="vy-row"
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '16px minmax(0,1fr) auto',
-                              gap: 6,
-                              alignItems: 'center',
-                              padding: 4,
-                              border: '1px solid var(--color-divider)',
-                              fontSize: 12,
-                            }}
-                          >
-                            <Icon d={CATS[i.cat].icon} size={14} />
-                            <span
-                              style={{
-                                fontWeight: 700,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                              title={i.title}
-                            >
-                              {i.title}
-                            </span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span>{fmt(i.cost)}</span>
-                              {!op.final && !already && (
-                                <button
-                                  type="button"
-                                  className="btn btn-ghost vy-act"
-                                  onClick={() => toFinal(i, op.name)}
-                                  style={{ padding: '0 4px', fontSize: 11 }}
-                                >
-                                  → Final
-                                </button>
-                              )}
-                              {!op.final && already && (
-                                <span className="tag tag-accent" style={{ padding: '0 5px', fontSize: 10 }}>
-                                  in Final
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        );
-                      })}
-                  </div>
-                ))}
-              </Fragment>
-            );
-          })}
+      <div className="page-hd">
+        <div>
+          <h2>Compare</h2>
+          <p>Every option side by side, aligned by day. Send anything straight into the Final plan.</p>
         </div>
       </div>
+
+      <section className="card card-flush">
+        <div style={{ overflowX: 'auto' }}>
+          <table className="cmp" style={{ minWidth: 720 }}>
+            <thead>
+              <tr>
+                <th className="cmp-day">Day</th>
+                {vac.options.map((op) => (
+                  <th key={op.id} className={op.final ? 'cmp-final' : undefined}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                      <span>
+                        <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
+                          {op.name}
+                        </span>
+                        <span className="subtle" style={{ fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>
+                          {op.final ? 'merged' : op.author}
+                        </span>
+                      </span>
+                      <span className="num" style={{ fontWeight: 700, color: 'var(--text)' }}>
+                        {fmt(total(op))}
+                      </span>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: nDays }, (_, k) => {
+                const date = addDays(vac.start, k);
+                return (
+                  <tr key={date}>
+                    <td className="cmp-day">
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>Day {k + 1}</div>
+                      <div className="subtle" style={{ fontSize: 11 }}>
+                        {short(date)}
+                      </div>
+                    </td>
+                    {vac.options.map((op) => {
+                      const items = op.items.filter((i) => i.date === date);
+                      return (
+                        <td key={op.id} className={op.final ? 'cmp-final' : undefined}>
+                          {items.length === 0 && (
+                            <span className="subtle" style={{ fontSize: 11, paddingLeft: 2 }}>
+                              —
+                            </span>
+                          )}
+                          {items.map((i) => {
+                            const already = inFinal(i);
+                            return (
+                              <div key={i.id} className="cmp-item" title={`${i.title} · ${dayLabel(i.date)}`}>
+                                <Icon d={CATS[i.cat].icon} size={13} stroke="var(--text-3)" />
+                                <span className="nm">{i.title}</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <span className="num">{fmt(i.cost)}</span>
+                                  {!op.final && !already && (
+                                    <span className="item-acts">
+                                      <button
+                                        type="button"
+                                        className="btn btn-ghost btn-sm"
+                                        onClick={() => toFinal(i, op.name)}
+                                        title="Copy to the Final plan"
+                                      >
+                                        <Icon name="arrowRight" size={12} />
+                                        Final
+                                      </button>
+                                    </span>
+                                  )}
+                                  {!op.final && already && (
+                                    <Badge tone="good" small icon="check">
+                                      Final
+                                    </Badge>
+                                  )}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </>
   );
 }

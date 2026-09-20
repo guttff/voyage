@@ -1,0 +1,92 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Voyage — design tokens.
+
+   The steel-blue accent ramp is carried over from the Industry design system
+   the app was prototyped in; everything around it (surfaces, elevation, radii,
+   status colours) is rebuilt for a production application rather than a
+   wireframe. Every text colour below clears 4.5:1 on the surface it is used
+   on; mark-only colours clear 3:1 and are always paired with a label.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* — surfaces — */
+  --bg: #f4f6f8;            /* app plane */
+  --surface: #ffffff;       /* cards, tables, dialogs */
+  --surface-2: #f7f9fb;     /* table headers, subtle fills */
+  --surface-3: #eef2f6;     /* hover wash, inset panels */
+  --surface-inset: #f1f4f7;
+
+  /* — lines — */
+  --border: #e2e8ee;        /* hairline */
+  --border-strong: #cbd5e0; /* input borders, dividers that must read */
+
+  /* — ink — */
+  --text: #16202b;
+  --text-2: #5a6a7a;        /* 5.56:1 — secondary copy */
+  --text-3: #67737f;        /* 4.62:1 — labels, captions */
+  --text-inverse: #ffffff;
+
+  /* — brand: steel blue, from the original design system — */
+  --accent-50: #f4f8fc;
+  --accent-100: #eef6ff;
+  --accent-200: #d6ebff;
+  --accent-300: #b5d9fd;
+  --accent-400: #94bce3;
+  --accent-500: #749dc4;
+  --accent-600: #597ea3;
+  --accent-700: #416180;    /* 6.47:1 — the interactive colour */
+  --accent-800: #2c455d;
+  --accent-900: #16232f;    /* the rail */
+  --accent: var(--accent-700);
+
+  /* — status. Never used alone: always with a label, and an icon where the
+       colour is the whole message. — */
+  --good: #0ca30c;          /* mark */
+  --good-text: #006300;     /* 7.54:1 */
+  --good-bg: #e8f6e8;
+  --good-border: #b9e3b9;
+
+  --warn: #fab219;          /* mark — 1.83:1, label-relieved */
+  --warn-text: #8a5a00;     /* 5.93:1 */
+  --warn-bg: #fdf4e3;
+  --warn-border: #f2ddb0;
+
+  --critical: #d03b3b;      /* 4.80:1 — reads as text or mark */
+  --critical-text: #b3261e;
+  --critical-bg: #fdeceb;
+  --critical-border: #f4c4c1;
+
+  /* — data — */
+  --series: #2a78d6;        /* 4.42:1 — the fund line */
+  --series-wash: rgba(42, 120, 214, 0.10);
+  --grid: #e8edf2;
+  --axis: #cbd5e0;
+
+  /* — type — */
+  --font: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-brand: 'Barlow Condensed', var(--font);
+
+  /* — space (4px base) — */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+  --s8: 32px;
+  --s10: 40px;
+
+  /* — radii — */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --r-pill: 999px;
+
+  /* — elevation — */
+  --sh-sm: 0 1px 2px rgba(22, 32, 43, 0.06);
+  --sh-md: 0 2px 4px rgba(22, 32, 43, 0.06), 0 4px 12px rgba(22, 32, 43, 0.08);
+  --sh-lg: 0 8px 28px rgba(22, 32, 43, 0.16);
+
+  --rail-w: 248px;
+  --topbar-h: 56px;
+}

@@ -1,109 +1,442 @@
-/* Voyage app chrome — the rules that lived in the prototype's <helmet> block,
-   plus the styles for the React <ImageSlot>, which replaces the design tool's
-   <image-slot> custom element. */
+/* ─────────────────────────────────────────────────────────────────────────
+   Voyage — app shell and feature styles.
+   ───────────────────────────────────────────────────────────────────────── */
 
-body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
-a { color: var(--color-accent); }
-a:hover { color: var(--color-accent-700); }
+.shell {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  min-height: 100vh;
+}
 
-.vy-row:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
-.vy-row:hover .vy-act { opacity: 1; }
-.vy-act { opacity: 0; transition: opacity .12s; }
-.vy-act:focus-within { opacity: 1; }
-.vy-nav:hover { background: var(--color-accent-800); }
-.vy-tripcard:hover { box-shadow: var(--shadow-md); }
-button { cursor: pointer; }
+/* ── rail ────────────────────────────────────────────────────────────── */
 
-/* — image slots — */
-.vy-slot {
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  padding: var(--s4) var(--s3);
+  color: #cdd8e3;
+  background: var(--accent-900);
+}
+.rail-brand { display: flex; align-items: center; gap: var(--s2); padding: 0 var(--s2); }
+.rail-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  color: var(--accent-300);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-md);
+}
+.rail-name {
+  font-family: var(--font-brand);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+.rail-tag { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #8fa5ba; }
+
+.rail-group { display: flex; flex-direction: column; gap: 2px; }
+.rail-group-label {
+  padding: 0 var(--s2) var(--s1);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7e93a8;
+}
+.rail-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px var(--s2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  color: #cdd8e3;
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.rail-link:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.rail-link[aria-current='page'] { background: rgba(255, 255, 255, 0.12); color: #fff; font-weight: 600; }
+.rail-link:disabled { opacity: .4; cursor: not-allowed; }
+.rail-link svg { flex: none; opacity: .85; }
+.rail-count { margin-left: auto; font-size: 11px; font-variant-numeric: tabular-nums; color: #8fa5ba; }
+
+.rail-person {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  width: 100%;
+  padding: 6px var(--s2);
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.rail-person:hover { background: rgba(255, 255, 255, 0.07); }
+.rail-person[aria-pressed='true'] { background: rgba(255, 255, 255, 0.12); }
+.rail-person-name { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.2; }
+.rail-person-role { font-size: 11px; color: #8fa5ba; }
+
+/* ── topbar + content ────────────────────────────────────────────────── */
+
+.main { display: flex; flex-direction: column; min-width: 0; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: var(--topbar-h);
+  padding: var(--s2) var(--s6);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.crumbs { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-3); min-width: 0; }
+.crumbs button {
+  font: inherit;
+  color: var(--text-2);
+  background: none;
+  border: 0;
+  padding: 2px 4px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.crumbs button:hover { color: var(--accent-700); background: var(--surface-3); }
+.crumbs .here { color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-actions { display: flex; align-items: center; gap: var(--s2); margin-left: auto; }
+
+.content { padding: var(--s6); display: flex; flex-direction: column; gap: var(--s5); }
+
+.page-hd { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); }
+.page-hd p { margin: 4px 0 0; font-size: 13px; color: var(--text-2); }
+
+.grid { display: grid; gap: var(--s4); }
+.grid-kpi { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.grid-cards { grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+/* ── hero (trip cover) ───────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--accent-800);
+  border: 1px solid var(--border);
+}
+.hero-media { position: absolute; inset: 0; }
+.hero-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(12, 22, 31, 0.88) 0%, rgba(12, 22, 31, 0.28) 45%, rgba(12, 22, 31, 0.05) 100%);
+}
+.hero-body {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s6);
+  color: #fff;
+  pointer-events: none;
+}
+.hero-body .btn, .hero-body .badge { pointer-events: auto; }
+.hero-kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-300); }
+.hero-title { font-size: 34px; font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; }
+.hero-meta { margin-top: var(--s1); font-size: 13px; color: rgba(255, 255, 255, 0.85); }
+
+/* ── trip cards ──────────────────────────────────────────────────────── */
+
+.trip-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  transition: box-shadow .14s, border-color .14s, transform .14s;
+}
+.trip-card:hover { box-shadow: var(--sh-md); border-color: var(--border-strong); transform: translateY(-1px); }
+/* position: required — the .tint overlay and the photo layer anchor to this. */
+.trip-card-media { position: relative; height: 136px; background: var(--accent-100); overflow: hidden; }
+.trip-card-bd { display: flex; flex-direction: column; gap: 6px; padding: var(--s3); }
+
+/* A dashed tile is right here — it is an action, not a placeholder for
+   missing content. */
+.add-tile {
+  display: grid;
+  place-items: center;
+  gap: var(--s2);
+  min-height: 180px;
+  padding: var(--s5);
+  font: inherit;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: border-color .12s, background .12s, color .12s;
+}
+.add-tile:hover { border-color: var(--accent-600); background: var(--accent-50); color: var(--accent-700); }
+.add-tile strong { display: block; font-size: 14px; color: inherit; }
+.add-tile span { font-size: 12px; color: var(--text-3); }
+
+/* ── itinerary ───────────────────────────────────────────────────────── */
+
+.day { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: var(--s3); position: relative; }
+.day + .day { margin-top: var(--s2); }
+.day-rule { position: absolute; left: 17px; top: 30px; bottom: -10px; width: 1px; background: var(--border); }
+.day:last-child .day-rule { display: none; }
+.day-num {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+}
+.day-has .day-num { color: var(--accent-800); background: var(--accent-100); border-color: var(--accent-400); }
+.day-hd { display: flex; align-items: center; gap: var(--s2); height: 30px; }
+.day-hd .t { font-size: 13px; font-weight: 600; }
+
+.item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: var(--s3);
+  align-items: start;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  transition: border-color .12s, box-shadow .12s;
+}
+.item + .item { margin-top: 6px; }
+.item:hover { border-color: var(--border-strong); box-shadow: var(--sh-sm); }
+.item:hover .item-acts, .item:focus-within .item-acts { opacity: 1; }
+.item-cat {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--accent-700);
+  background: var(--accent-50);
+  border-radius: var(--r-sm);
+}
+.item-title { font-size: 13px; font-weight: 600; }
+.item-note { font-size: 12px; color: var(--text-2); }
+.item-by { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 11px; color: var(--text-3); }
+.item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.item-cost { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.item-acts { display: flex; gap: 2px; opacity: 0; transition: opacity .12s; }
+
+.chip {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent-700);
+  border-radius: 50%;
+}
+
+/* ── compare grid ────────────────────────────────────────────────────── */
+
+.cmp { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+.cmp th, .cmp td { border-bottom: 1px solid var(--border); vertical-align: top; }
+/* The scroll container is the wrapping div, not the page, so `top` is measured
+   from that container — any non-zero offset pushes the header DOWN over the
+   first row instead of pinning it. The column that actually needs to stay put
+   is the day, while the options scroll sideways past it. */
+.cmp thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--s3);
+  text-align: left;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.cmp thead th + th { border-left: 1px solid var(--border); }
+.cmp tbody td { padding: 6px; }
+.cmp tbody td + td { border-left: 1px solid var(--border); }
+.cmp-day {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 128px;
+  padding: var(--s3) !important;
+  background: var(--surface-2);
+  box-shadow: 1px 0 0 var(--border);
+}
+.cmp thead .cmp-day { z-index: 3; }
+.cmp-final { background: var(--accent-50); }
+.cmp-item {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.cmp-item + .cmp-item { margin-top: 4px; }
+.cmp-item:hover { border-color: var(--border-strong); }
+.cmp-item:hover .item-acts, .cmp-item:focus-within .item-acts { opacity: 1; }
+.cmp-item .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── fund chart ──────────────────────────────────────────────────────── */
+
+.chart-wrap { position: relative; }
+.chart-wrap svg { display: block; width: 100%; height: auto; }
+.chart-tip {
+  position: absolute;
+  z-index: 2;
+  min-width: 132px;
+  padding: var(--s2) 10px;
+  font-size: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-md);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+}
+.chart-tip .m { font-weight: 600; margin-bottom: 2px; }
+.chart-tip .v { font-variant-numeric: tabular-nums; }
+
+/* ── photo slots ─────────────────────────────────────────────────────── */
+
+.slot {
   position: relative;
   display: block;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  color: inherit;
   padding: 0;
   border: 0;
-  background: transparent;
+  background: var(--surface-3);
   font: inherit;
+  color: var(--text-2);
   cursor: pointer;
 }
-.vy-slot img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.vy-slot-shape-circle { border-radius: 50%; }
-.vy-slot-ring {
+.slot img { width: 100%; height: 100%; object-fit: cover; }
+.slot-circle { border-radius: 50%; }
+.slot-empty {
   position: absolute;
   inset: 0;
   display: grid;
-  place-items: center;
+  place-content: center;
+  justify-items: center;
   gap: 6px;
-  padding: 8px;
+  padding: var(--s3);
   text-align: center;
-  border: 1px dashed color-mix(in srgb, currentColor 40%, transparent);
-  color: inherit;
-  pointer-events: none;
-}
-.vy-slot-shape-circle .vy-slot-ring { border-radius: 50%; }
-.vy-slot[data-filled] .vy-slot-ring { display: none; }
-.vy-slot-cap {
   font-size: 12px;
-  line-height: 1.3;
-  opacity: .75;
-  max-width: 100%;
+  color: var(--text-3);
+  transition: background .12s, color .12s;
 }
-.vy-slot:hover .vy-slot-ring,
-.vy-slot[data-over] .vy-slot-ring { border-color: var(--color-accent); color: var(--color-accent); }
-.vy-slot[data-over]::after {
-  content: "";
+.slot[data-filled] .slot-empty { display: none; }
+.slot:hover .slot-empty, .slot[data-over] .slot-empty { background: var(--accent-50); color: var(--accent-700); }
+.slot[data-over]::after {
+  content: '';
   position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  inset: 3px;
+  border: 2px dashed var(--accent-600);
+  border-radius: var(--r-md);
   pointer-events: none;
 }
-/* Clear control, only once a photo is in and only on hover. */
-.vy-slot-clear {
+.slot-circle[data-over]::after { border-radius: 50%; }
+.slot-clear {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 6px;
+  right: 6px;
   z-index: 2;
   display: none;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
+  place-items: center;
+  width: 24px;
+  height: 24px;
   padding: 0;
   font: inherit;
-  font-size: 13px;
-  line-height: 1;
-  color: var(--color-bg);
-  background: color-mix(in srgb, var(--color-neutral-900) 65%, transparent);
+  color: #fff;
+  background: rgba(22, 32, 43, 0.62);
   border: 0;
+  border-radius: 50%;
+  cursor: pointer;
 }
-.vy-slot[data-filled]:hover .vy-slot-clear { display: flex; }
+.slot[data-filled]:hover .slot-clear { display: grid; }
+.slot-clear:hover { background: rgba(22, 32, 43, 0.85); }
 
-/* The small avatar overlays sit on top of an initial; they only show once a
-   photo has actually been dropped in (the prototype keyed this off the custom
-   element's data-filled attribute — same idea). */
-.vy-av .vy-slot { opacity: 0; }
-.vy-av .vy-slot[data-filled] { opacity: 1; }
-.vy-av .vy-slot-clear { display: none !important; }
+/* On a hero or card cover the empty prompt should read on the dark plate. */
+.slot-onDark { background: transparent; }
+.slot-onDark .slot-empty { color: rgba(255, 255, 255, 0.72); }
+.slot-onDark:hover .slot-empty { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
-/* — narrow screens: the 220px rail collapses to a top bar — */
-@media (max-width: 760px) {
-  .vy-shell { grid-template-columns: minmax(0, 1fr) !important; }
-  .vy-sidebar {
-    position: static !important;
-    height: auto !important;
-    gap: var(--space-3) !important;
+/* Avatar overlays sit on top of an initial and only show once filled. */
+.av { position: relative; flex: none; border-radius: 50%; overflow: hidden; background: var(--accent-600); display: grid; place-items: center; color: #fff; font-weight: 600; }
+.av-photo { position: absolute; inset: 0; pointer-events: none; }
+.av-photo .slot { opacity: 0; background: transparent; }
+.av-photo .slot[data-filled] { opacity: 1; }
+.av-photo .slot-clear { display: none !important; }
+
+/* Steel-blue tint on trip photography, toggleable in Settings. Deliberately
+   sets no `position`: it is always applied to a layer that is already
+   positioned (.hero-media is absolute, .trip-card-media is relative), and
+   declaring it here would override those and collapse the layer. */
+.tint::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--accent-600);
+  mix-blend-mode: color;
+  opacity: .85;
+}
+
+/* ── responsive ──────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--s3);
+    padding: var(--s2) var(--s3);
   }
-  .vy-sidebar .vy-nav { flex: 1; justify-content: center; }
-  .vy-nav-list { flex-direction: row !important; flex-wrap: wrap; }
-  .vy-people { flex-direction: row !important; }
-  .vy-tagline { display: none; }
-  .vy-spacer { display: none; }
-  .vy-main { padding: var(--space-4) !important; }
+  .rail-group { flex-direction: row; flex-wrap: wrap; }
+  .rail-group-label, .rail-spacer, .rail-person-role { display: none; }
+  .rail-people { display: flex; gap: var(--s2); margin-left: auto; }
+  .content, .topbar { padding-left: var(--s4); padding-right: var(--s4); }
+  .hero-title { font-size: 26px; }
+  .hero-body { padding: var(--s4); }
 }

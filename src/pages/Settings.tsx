@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { Corners } from '../components/Blueprint';
+import { Icon } from '../components/Icon';
 import { ImageSlot } from '../components/ImageSlot';
+import { useToast } from '../components/ui/Toast';
 import { seed } from '../lib/seed';
 import { useStore } from '../state/store';
 import { useUi } from '../state/ui';
 import type { Backup } from '../lib/types';
 
 export function Settings() {
-  const { data, setData, replaceData, images, restoreImages, me } = useStore();
+  const { data, setData, replaceData, images, restoreImages } = useStore();
   const ui = useUi();
-  const [msg, setMsg] = useState('');
+  const toast = useToast();
 
   const download = () => {
     const backup: Backup = {
@@ -27,7 +27,7 @@ export function Settings() {
     a.download = 'voyage-backup.json';
     a.click();
     URL.revokeObjectURL(url);
-    setMsg('Backup downloaded.');
+    toast('Backup downloaded', 'good');
   };
 
   const restore = (file: File | undefined) => {
@@ -47,9 +47,9 @@ export function Settings() {
         });
         if (j.images) restoreImages(j.images);
         ui.resetRoute(j.vacations[0]?.id);
-        setMsg(`Restored ${j.vacations.length} trips.`);
+        toast(`Restored ${j.vacations.length} trips`, 'good');
       } catch (err) {
-        setMsg('Could not restore: ' + (err as Error).message);
+        toast('Could not restore: ' + (err as Error).message, 'critical');
       }
     };
     r.readAsText(file);
@@ -58,9 +58,10 @@ export function Settings() {
   const reset = () =>
     ui.openPanel({
       kind: 'confirm',
+      tone: 'danger',
       confirm: {
         title: 'Reset to sample data?',
-        body: 'Your trips, options and budget rules in this browser are replaced with the demo set. Traveler photos are kept.',
+        body: 'Your trips, options and contribution rules in this browser are replaced with the demo set. Traveler photos are kept.',
         label: 'Reset',
         go: () => {
           const d = seed();
@@ -73,58 +74,57 @@ export function Settings() {
           );
           restoreImages(keep);
           ui.resetRoute(d.vacations[0].id);
-          setMsg('Reset done.');
+          toast('Reset to sample data');
         },
       },
     });
 
   return (
     <>
-      <div>
-        <h2 style={{ margin: 0 }}>Settings</h2>
-        <div className="text-muted">Names, photos and your data. Everything is saved in this browser.</div>
+      <div className="page-hd">
+        <div>
+          <h1>Settings</h1>
+          <p>Names, photos and your data. Everything is stored in this browser.</p>
+        </div>
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))',
-          gap: 'var(--space-4)',
-          alignItems: 'start',
-        }}
-      >
+      <div className="grid grid-2">
         {data.people.map((p, i) => (
           <TravelerCard key={p.id} id={p.id} n={i + 1} />
         ))}
+      </div>
 
-        <div className="card blueprint">
-          <Corners />
-          <div className="card-kicker">Photos</div>
-          <label className="radio">
+      <div className="grid grid-2">
+        <section className="card">
+          <h3>Photos</h3>
+          <label className="choice" style={{ alignItems: 'flex-start' }}>
             <input
               type="checkbox"
               checked={!!data.duotone}
               onChange={() => setData((s) => ({ ...s, duotone: !s.duotone }))}
-              style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
             />
-            <span
-              className="dot"
-              style={{ borderRadius: 0, background: data.duotone ? 'var(--color-accent)' : 'transparent' }}
-            />
-            Tint trip photos in steel blue (the blueprint look)
+            <span>
+              <span style={{ display: 'block', fontWeight: 600 }}>Tint trip photography</span>
+              <span className="subtle" style={{ fontSize: 12 }}>
+                A steel-blue wash over covers, so text on top always reads.
+              </span>
+            </span>
           </label>
+        </section>
 
-          <div className="card-kicker" style={{ marginTop: 'var(--space-3)' }}>
-            Data
-          </div>
-          <div className="card-body">
-            Full backup of every trip, option, budget rule and photo. Restore it on another device via Import.
-          </div>
+        <section className="card">
+          <h3>Your data</h3>
+          <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+            A backup holds every trip, option, contribution rule and photo. It is also how you hand the plan to each
+            other — there is no server behind this app.
+          </p>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            <button type="button" className="btn btn-secondary" onClick={download}>
+            <button type="button" className="btn" onClick={download}>
+              <Icon name="download" size={14} />
               Download backup
             </button>
-            <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+            <label className="btn" style={{ cursor: 'pointer' }}>
+              <Icon name="upload" size={14} />
               Restore backup
               <input
                 type="file"
@@ -136,13 +136,12 @@ export function Settings() {
                 style={{ display: 'none' }}
               />
             </label>
-            <button type="button" className="btn btn-ghost" onClick={reset} style={{ color: 'var(--color-neutral-700)' }}>
+            <button type="button" className="btn btn-danger" onClick={reset}>
+              <Icon name="trash" size={14} />
               Reset to sample data
             </button>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--color-accent-700)' }}>{msg}</div>
-          <div className="card-meta">Planning as {me.name}.</div>
-        </div>
+        </section>
       </div>
     </>
   );
@@ -152,28 +151,39 @@ function TravelerCard({ id, n }: { id: string; n: number }) {
   const { data, setPerson } = useStore();
   const p = data.people.find((x) => x.id === id)!;
   return (
-    <div className="card blueprint">
-      <Corners />
-      <div className="card-kicker">Traveler {n}</div>
-      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
+    <section className="card">
+      <span className="label">Traveler {n}</span>
+      <div style={{ display: 'flex', gap: 'var(--s4)', alignItems: 'center' }}>
         <ImageSlot
           id={`avatar-${p.id}`}
           shape="circle"
-          placeholder="Drop a photo"
-          style={{ width: 130, height: 130, flex: 'none' }}
+          placeholder="Photo"
+          style={{ width: 104, height: 104, flex: 'none' }}
         />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--s2)', minWidth: 0 }}>
           <div className="field">
-            <label>Name</label>
-            <input className="input" value={p.name} onChange={(e) => setPerson(p.id, { name: e.target.value })} />
+            <label htmlFor={`nm-${p.id}`}>Name</label>
+            <input
+              id={`nm-${p.id}`}
+              className="input"
+              value={p.name}
+              onChange={(e) => setPerson(p.id, { name: e.target.value })}
+            />
           </div>
           <div className="field">
-            <label>Role</label>
-            <input className="input" value={p.role} onChange={(e) => setPerson(p.id, { role: e.target.value })} />
+            <label htmlFor={`rl-${p.id}`}>Role</label>
+            <input
+              id={`rl-${p.id}`}
+              className="input"
+              value={p.role}
+              onChange={(e) => setPerson(p.id, { role: e.target.value })}
+            />
           </div>
         </div>
       </div>
-      <div className="card-meta">Drop a photo on the circle; it shows in the sidebar and on plan cards.</div>
-    </div>
+      <span className="subtle" style={{ fontSize: 12 }}>
+        Drop a photo on the circle; it shows in the sidebar and on plan cards.
+      </span>
+    </section>
   );
 }

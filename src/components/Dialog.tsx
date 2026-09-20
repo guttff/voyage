@@ -1,45 +1,42 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Corners } from './Blueprint';
 
 type Props = {
+  title: string;
+  description?: string;
   onClose: () => void;
   children: ReactNode;
+  footer: ReactNode;
 };
 
-/** The modal shell: click the backdrop or press Escape to dismiss. */
-export function Dialog({ onClose, children }: Props) {
+/** Modal shell: backdrop click or Escape dismisses; focus starts inside. */
+export function Dialog({ title, description, onClose, children, footer }: Props) {
+  const box = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
+    const first = box.current?.querySelector<HTMLElement>('input, select, textarea, button');
+    first?.focus();
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        display: 'grid',
-        placeItems: 'center',
-        padding: 'var(--space-4)',
-        background: 'color-mix(in srgb,var(--color-neutral-900) 50%,transparent)',
-        zIndex: 10,
-      }}
+      className="scrim"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className="dialog blueprint"
-        role="dialog"
-        aria-modal="true"
-        style={{ background: 'var(--color-bg)', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto' }}
-      >
-        <Corners />
-        {children}
+      <div className="dialog" role="dialog" aria-modal="true" aria-label={title} ref={box}>
+        <div className="dialog-hd">
+          <h2>{title}</h2>
+          {description && <p>{description}</p>}
+        </div>
+        <div className="dialog-bd">{children}</div>
+        <div className="dialog-ft">{footer}</div>
       </div>
     </div>
   );

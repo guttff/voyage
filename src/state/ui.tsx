@@ -6,7 +6,7 @@ export type Panel =
   | { kind: 'add'; optId: string; editId: string | null; date?: string }
   | { kind: 'copy'; optId: string; itemId: string }
   | { kind: 'newvac' }
-  | { kind: 'confirm'; confirm: Confirm }
+  | { kind: 'confirm'; confirm: Confirm; tone?: 'danger' }
   | null;
 
 export type ImportMode = 'new' | string;

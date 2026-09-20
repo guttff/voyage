@@ -21,10 +21,11 @@ npm run preview    # serve the build on :4173
 npm test           # browser smoke test — needs a running preview on :4173
 ```
 
-`npm test` drives a real Chromium through 23 flows (add/copy/import/export,
-budget projection, photos, persistence). It needs Playwright's browser; in a
-sandbox that already has one, point at it with
-`PLAYWRIGHT_EXECUTABLE=/path/to/chrome`.
+`npm test` drives a real Chromium through 32 flows — add/copy/import/export,
+the budget projection, photos, persistence, plus layout regressions (photo
+layers must not collapse, the compare header must not offset, no horizontal
+overflow at 1440 or 420). It needs Playwright's browser; in a sandbox that
+already has one, point at it with `PLAYWRIGHT_EXECUTABLE=/path/to/chrome`.
 
 ## Deploying
 
@@ -67,11 +68,27 @@ photos), restore, and reset to the sample set.
 
 ## How it's built
 
-React 18 + TypeScript + Vite, no UI framework. The Industry design system from
-the handoff is used as-is (`src/styles/industry.css`, copied verbatim) — the
-blueprint frames, tonal ramps and Barlow / Barlow Condensed type are all from
-there. Layout that was inline in the prototype stayed inline, so the two can be
-diffed by eye.
+React 18 + TypeScript + Vite, no UI framework.
+
+The design prototype used a blueprint/wireframe language — corner registration
+marks, transparent cards, square corners — which reads as a mockup. The app
+keeps that palette's steel-blue accent ramp and Barlow type, and rebuilds
+everything else as a production interface:
+
+- `src/styles/theme.css` — tokens. Every text colour clears 4.5:1 on the
+  surface it sits on; mark-only colours clear 3:1 and always carry a label.
+- `src/styles/components.css` — buttons, inputs, cards, tables, badges,
+  dialogs, toasts, tabs.
+- `src/styles/app.css` — the shell (rail, topbar, content) and feature styles.
+
+Status is semantic rather than decorative: a trip is **Covered** (green) or
+**Short** (red), and the colour never carries the meaning alone — every badge
+has text, and the ones that fail contrast as a mark also carry an icon.
+
+The 12-month projection is a single-series trend, so it is drawn as a line and
+area with a real zero baseline (the whole question is whether the fund ever goes
+under it), trip annotations instead of a value on every point, a hover
+crosshair, and a table view for anyone who can't use the chart.
 
 ```
 src/

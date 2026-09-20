@@ -16,7 +16,8 @@ export type VacRow = {
   verdict: string;
   /** The same call, short enough for a list row. */
   verdictShort: string;
-  tagClass: string;
+  /** Badge tone. Status colour is never the only signal — the text says it too. */
+  tone: 'good' | 'critical' | 'neutral';
 };
 
 export function vacRow(vac: Vacation, sim: Simulation): VacRow {
@@ -32,8 +33,8 @@ export function vacRow(vac: Vacation, sim: Simulation): VacRow {
     optCount: vac.options.length,
     daysUntil: Math.max(0, diffDays(today(), vac.start)),
     verdict: p.cost ? (ok ? `Covered · ${fmt(p.after)} left` : `Short by ${fmt(-p.after)}`) : 'Nothing planned',
-    verdictShort: p.cost ? (ok ? 'covered' : `short ${fmt(-p.after)}`) : 'no plan',
-    tagClass: ok ? 'tag-accent' : 'tag-outline',
+    verdictShort: p.cost ? (ok ? 'Covered' : `Short ${fmt(-p.after)}`) : 'No plan',
+    tone: !p.cost ? 'neutral' : ok ? 'good' : 'critical',
   };
 }
 

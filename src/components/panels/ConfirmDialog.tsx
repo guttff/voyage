@@ -1,23 +1,33 @@
-import { Corners } from '../Blueprint';
 import { Dialog } from '../Dialog';
 import { useUi } from '../../state/ui';
 import type { Confirm } from '../../lib/types';
 
-export function ConfirmDialog({ confirm }: { confirm: Confirm }) {
+export function ConfirmDialog({ confirm, tone }: { confirm: Confirm; tone?: 'danger' }) {
   const ui = useUi();
   return (
-    <Dialog onClose={ui.closePanel}>
-      <div className="dialog-title">{confirm.title}</div>
-      <div className="dialog-body">{confirm.body}</div>
-      <div className="dialog-actions">
-        <button type="button" className="btn btn-secondary" onClick={ui.closePanel}>
-          Cancel
-        </button>
-        <button type="button" className="btn btn-primary blueprint" onClick={confirm.go}>
-          <Corners />
-          {confirm.label}
-        </button>
-      </div>
+    <Dialog
+      title={confirm.title}
+      onClose={ui.closePanel}
+      footer={
+        <>
+          <span className="spacer" />
+          <button type="button" className="btn" onClick={ui.closePanel}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={confirm.go}
+            style={tone === 'danger' ? { background: 'var(--critical-text)', borderColor: 'var(--critical-text)' } : undefined}
+          >
+            {confirm.label}
+          </button>
+        </>
+      }
+    >
+      <p className="muted" style={{ margin: 0 }}>
+        {confirm.body}
+      </p>
     </Dialog>
   );
 }

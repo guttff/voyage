@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { StoreProvider, useStore } from './state/store';
 import { UiProvider } from './state/ui';
-import './styles/industry.css';
+import { ToastProvider } from './components/ui/Toast';
+import './styles/theme.css';
+import './styles/components.css';
 import './styles/app.css';
 
 /** The route needs a trip to point at, which only exists once data has loaded. */
@@ -18,8 +20,10 @@ function Root() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <StoreProvider>
-      <Root />
-    </StoreProvider>
+    <ToastProvider>
+      <StoreProvider>
+        <Root />
+      </StoreProvider>
+    </ToastProvider>
   </StrictMode>,
 );

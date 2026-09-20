@@ -1,4 +1,6 @@
 import { Sidebar } from './components/Sidebar';
+import { Icon } from './components/Icon';
+import { EmptyState } from './components/ui/EmptyState';
 import { AddItemDialog } from './components/panels/AddItemDialog';
 import { CopyItemDialog } from './components/panels/CopyItemDialog';
 import { ConfirmDialog } from './components/panels/ConfirmDialog';
@@ -11,6 +13,20 @@ import { Settings } from './pages/Settings';
 import { useStore } from './state/store';
 import { useUi } from './state/ui';
 
+const TITLES: Record<string, string> = {
+  home: 'Overview',
+  trips: 'Trips',
+  budget: 'Travel fund',
+  settings: 'Settings',
+};
+
+const TAB_LABEL: Record<string, string> = {
+  plans: 'Plan options',
+  itinerary: 'Itinerary',
+  compare: 'Compare',
+  io: 'Import / Export',
+};
+
 export function App() {
   const { data } = useStore();
   const ui = useUi();
@@ -19,41 +35,50 @@ export function App() {
   const vac = data.vacations.find((v) => v.id === route.vacId) || data.vacations[0];
 
   return (
-    <div
-      className="vy-shell"
-      style={{
-        position: 'relative',
-        minHeight: '100vh',
-        display: 'grid',
-        gridTemplateColumns: '220px minmax(0,1fr)',
-        fontSize: 14,
-      }}
-    >
+    <div className="shell">
       <Sidebar />
 
-      <main
-        className="vy-main"
-        style={{
-          padding: 'var(--space-6)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-6)',
-          minWidth: 0,
-        }}
-      >
-        {route.page === 'home' && <Home />}
-        {route.page === 'trips' && <Trips />}
-        {route.page === 'trip' && (vac ? <TripDetail vac={vac} /> : <NoTrips />)}
-        {route.page === 'budget' && <Budget />}
-        {route.page === 'settings' && <Settings />}
-      </main>
+      <div className="main">
+        <header className="topbar">
+          <nav className="crumbs" aria-label="Breadcrumb">
+            {route.page === 'trip' && vac ? (
+              <>
+                <button type="button" onClick={() => ui.go('trips')}>
+                  Trips
+                </button>
+                <Icon name="chevronRight" size={13} stroke="var(--text-3)" />
+                <span className="here">{vac.name}</span>
+                <Icon name="chevronRight" size={13} stroke="var(--text-3)" />
+                <span>{TAB_LABEL[route.tab]}</span>
+              </>
+            ) : (
+              <span className="here">{TITLES[route.page] ?? 'Voyage'}</span>
+            )}
+          </nav>
+
+          <div className="topbar-actions">
+            <button type="button" className="btn btn-primary" onClick={() => ui.openPanel({ kind: 'newvac' })}>
+              <Icon name="plus" size={14} />
+              New trip
+            </button>
+          </div>
+        </header>
+
+        <main className="content">
+          {route.page === 'home' && <Home />}
+          {route.page === 'trips' && <Trips />}
+          {route.page === 'trip' && (vac ? <TripDetail vac={vac} /> : <NoTrips />)}
+          {route.page === 'budget' && <Budget />}
+          {route.page === 'settings' && <Settings />}
+        </main>
+      </div>
 
       {panel?.kind === 'add' && vac && (
         <AddItemDialog vac={vac} optId={panel.optId} editId={panel.editId} date={panel.date} />
       )}
       {panel?.kind === 'copy' && vac && <CopyItemDialog vac={vac} optId={panel.optId} itemId={panel.itemId} />}
       {panel?.kind === 'newvac' && <NewTripDialog />}
-      {panel?.kind === 'confirm' && <ConfirmDialog confirm={panel.confirm} />}
+      {panel?.kind === 'confirm' && <ConfirmDialog confirm={panel.confirm} tone={panel.tone} />}
     </div>
   );
 }
@@ -61,17 +86,18 @@ export function App() {
 function NoTrips() {
   const ui = useUi();
   return (
-    <div>
-      <h2 style={{ margin: 0 }}>No trips yet</h2>
-      <div className="text-muted">Create one to start planning together.</div>
-      <button
-        type="button"
-        className="btn btn-primary"
-        onClick={() => ui.openPanel({ kind: 'newvac' })}
-        style={{ marginTop: 'var(--space-3)' }}
-      >
-        + New trip
-      </button>
+    <div className="card">
+      <EmptyState
+        icon="trips"
+        title="No trips yet"
+        body="Create a trip and you'll each get your own plan to build, plus a shared final itinerary to merge the best parts into."
+        action={
+          <button type="button" className="btn btn-primary" onClick={() => ui.openPanel({ kind: 'newvac' })}>
+            <Icon name="plus" size={14} />
+            New trip
+          </button>
+        }
+      />
     </div>
   );
 }
