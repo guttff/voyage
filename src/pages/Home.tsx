@@ -16,14 +16,10 @@ export function Home() {
   const next = upcoming(data.vacations)[0] || data.vacations[0];
   const nextRow = next ? vacRow(next, sim) : null;
   const summary = budgetSummary(data, sim);
-  const [p1, p2] = data.people;
 
   const target = next ? sim.perVac[next.id].cost : 0;
   const pct = target ? Math.min(1, data.budget.saved / target) : 0;
   const shortfall = Math.max(0, target - data.budget.saved);
-
-  const hour = new Date().getHours();
-  const greeting = `Good ${hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'}, ${p1.name}${p2 ? ' & ' + p2.name : ''}`;
 
   if (!next) {
     return (
@@ -45,14 +41,11 @@ export function Home() {
 
   return (
     <>
-      <div className="page-hd">
-        <div>
-          <h1>{greeting}</h1>
-          <p>
-            {next.name} is {Math.max(0, diffDays(today(), next.start))} days away.
-          </p>
-        </div>
-      </div>
+      {/* The countdown is the page heading — the breadcrumb already says where
+          you are, so a separate title line only costs vertical space. */}
+      <h1 className="page-lede">
+        {next.name} is {Math.max(0, diffDays(today(), next.start))} days away.
+      </h1>
 
       {/* ── KPI row ── */}
       <div className="grid grid-kpi">

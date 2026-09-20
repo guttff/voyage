@@ -130,6 +130,10 @@
 .page-hd { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); }
 .page-hd p { margin: 4px 0 0; font-size: 13px; color: var(--text-2); }
 
+/* A one-line page heading, for views whose title would just repeat the
+   breadcrumb. */
+.page-lede { font-size: 17px; font-weight: 600; color: var(--text); }
+
 .grid { display: grid; gap: var(--s4); }
 .grid-kpi { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
 .grid-cards { grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); }

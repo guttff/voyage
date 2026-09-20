@@ -60,9 +60,10 @@ await step('photo layers have real geometry (tint must not collapse them)', asyn
   if (!(await prompt.isVisible())) throw new Error('no "add a photo" affordance on the hero');
 });
 
-await step('overview renders greeting, KPIs and next trip', async () => {
+await step('overview leads with the countdown, then KPIs and next trip', async () => {
   const h1 = await page.textContent('h1');
-  if (!/Good (morning|afternoon|evening), John & Sarah/.test(h1)) throw new Error('greeting: ' + h1);
+  if (!/^Costa Rica is \d+ days away\.$/.test(h1.trim())) throw new Error('lede: ' + h1);
+  if (await page.locator('h1', { hasText: 'Good ' }).count()) throw new Error('greeting is back');
   const kpis = await page.locator('.grid-kpi > .card').count();
   if (kpis !== 4) throw new Error('kpi tiles: ' + kpis);
   const t = await page.textContent('body');
