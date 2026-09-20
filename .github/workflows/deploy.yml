@@ -20,6 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Turns Pages on for the repo if it isn't already, using the pages:write
+      # permission above — so a fresh clone of this repo deploys with no
+      # manual setup in Settings.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/setup-node@v4
         with:
           node-version: 20

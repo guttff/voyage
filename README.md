@@ -29,8 +29,8 @@ sandbox that already has one, point at it with
 ## Deploying
 
 Pushing to `main` builds and publishes to GitHub Pages via
-`.github/workflows/deploy.yml`. Pages must be set to **Source: GitHub Actions**
-once, under Settings → Pages.
+`.github/workflows/deploy.yml`. The workflow enables Pages itself through
+`actions/configure-pages`, so there's nothing to set up by hand.
 
 `vite.config.ts` uses a relative `base`, so the site works at any path — no
 config change if the repo is ever renamed.
