@@ -1,9 +1,13 @@
+import { useCallback, useMemo } from 'react';
 import { Icon } from '../../components/Icon';
 import { BudgetCheckCard } from '../../components/BudgetCheckCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useToast } from '../../components/ui/Toast';
+import { useItemDrag, stepTarget } from '../../components/itinerary/useItemDrag';
+import type { DayLayout, DropTarget } from '../../components/itinerary/useItemDrag';
 import { CATS, CAT_KEYS, total } from '../../lib/constants';
-import { addDays, dayLabel, diffDays, fmt, fmt2, initial } from '../../lib/format';
+import { addDays, dayLabel, diffDays, fmt, fmt2, initial, short } from '../../lib/format';
+import { placeInDay, sortDay } from '../../lib/order';
 import { useStore } from '../../state/store';
 import { useUi } from '../../state/ui';
 import type { ActiveVac } from '../../state/derive';
@@ -17,8 +21,44 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
   const nDays = diffDays(vac.start, vac.end) + 1;
   const oTotal = total(opt);
 
-  const byDate: Record<string, Item[]> = {};
-  opt.items.forEach((i) => (byDate[i.date] = byDate[i.date] || []).push(i));
+  const days = useMemo(() => {
+    const byDate: Record<string, Item[]> = {};
+    opt.items.forEach((i) => (byDate[i.date] = byDate[i.date] || []).push(i));
+    return Array.from({ length: nDays }, (_, k) => {
+      const date = addDays(vac.start, k);
+      return { date, n: k + 1, items: sortDay(byDate[date] || []) };
+    });
+  }, [opt.items, vac.start, nDays]);
+
+  const layout: DayLayout[] = useMemo(
+    () => days.map((d) => ({ date: d.date, itemIds: d.items.map((i) => i.id) })),
+    [days],
+  );
+
+  const moveItem = useCallback(
+    (itemId: string, t: DropTarget) => {
+      const item = opt.items.find((i) => i.id === itemId);
+      if (!item) return;
+      const current = layout.find((d) => d.itemIds.includes(itemId));
+      const atSamePlace = current?.date === t.date && current.itemIds.indexOf(itemId) === t.index;
+      if (atSamePlace) return;
+
+      updOpt(vac.id, opt.id, (o) => ({ ...o, items: placeInDay(o.items, item, t.date, t.index) }));
+      if (item.date !== t.date) {
+        const day = days.find((d) => d.date === t.date);
+        log(`${me.name} moved “${item.title}” to day ${day?.n ?? '?'} in ${opt.name}`);
+        toast(`Moved to ${short(t.date)}`);
+      }
+    },
+    [opt.items, opt.id, opt.name, vac.id, layout, days, updOpt, log, me.name, toast],
+  );
+
+  const drag = useItemDrag(layout, moveItem);
+
+  const nudge = (itemId: string, dir: -1 | 1) => {
+    const t = stepTarget(layout, itemId, dir);
+    if (t) moveItem(itemId, t);
+  };
 
   const removeItem = (i: Item) => {
     updOpt(vac.id, opt.id, (x) => ({ ...x, items: x.items.filter((y) => y.id !== i.id) }));
@@ -31,8 +71,13 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
     ...CAT_KEYS.map((k) => opt.items.filter((i) => i.cat === k).reduce((a, b) => a + Number(b.cost), 0)),
   );
 
+  const dragged = drag.dragId ? opt.items.find((i) => i.id === drag.dragId) : undefined;
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(240px,320px)', gap: 'var(--s4)', alignItems: 'start' }} className="itin">
+    <div
+      style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(240px,320px)', gap: 'var(--s4)', alignItems: 'start' }}
+      className="itin"
+    >
       <section className="card card-flush">
         {/* plan switcher */}
         <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border)' }}>
@@ -109,7 +154,7 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
           </div>
         </div>
 
-        <div className="card-bd">
+        <div className={`card-bd${drag.dragId ? ' is-dragging' : ''}`}>
           {opt.items.length === 0 ? (
             <EmptyState
               icon="calendar"
@@ -127,15 +172,17 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
               }
             />
           ) : (
-            Array.from({ length: nDays }, (_, k) => {
-              const date = addDays(vac.start, k);
-              // Timed items in clock order; untimed ones fall to the end.
-              const items = (byDate[date] || []).slice().sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
+            days.map(({ date, n, items }) => {
               const dayTotal = items.reduce((a, b) => a + Number(b.cost), 0);
+              const isTargetDay = drag.target?.date === date;
               return (
-                <div key={date} className={`day${items.length ? ' day-has' : ''}`}>
+                <div
+                  key={date}
+                  className={`day${items.length ? ' day-has' : ''}${isTargetDay ? ' day-target' : ''}`}
+                  ref={(el) => drag.registerDay(date, el)}
+                >
                   <div className="day-rule" />
-                  <div className="day-num">{k + 1}</div>
+                  <div className="day-num">{n}</div>
                   <div>
                     <div className="day-hd">
                       <span className="t">{dayLabel(date)}</span>
@@ -155,58 +202,96 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
                       </button>
                     </div>
 
-                    {items.map((i) => (
-                      <div key={i.id} className="item">
-                        <span className="item-cat">
-                          <Icon d={CATS[i.cat].icon} size={15} />
-                        </span>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span className="item-title">{i.title}</span>
-                            {i.time && (
-                              <span className="subtle num" style={{ fontSize: 11 }}>
-                                {i.time}
-                              </span>
-                            )}
-                          </div>
-                          {i.note && <div className="item-note">{i.note}</div>}
-                          <div className="item-by">
-                            <span className="chip">{initial(i.by)}</span>
-                            {i.from ? `${i.by} · from ${i.from}` : i.by}
+                    <div className="day-items">
+                      {items.map((i, idx) => (
+                        <div key={i.id}>
+                          {isTargetDay && drag.target?.index === idx && <div className="drop-line" />}
+                          <div
+                            className={`item${drag.dragId === i.id ? ' item-ghosted' : ''}`}
+                            ref={(el) => drag.registerItem(i.id, el)}
+                          >
+                            <button
+                              type="button"
+                              className="grip"
+                              aria-label={`Reorder ${i.title}. Drag, or use arrow keys.`}
+                              title="Drag to another day, or use ↑ ↓"
+                              onPointerDown={(e) => drag.onGripPointerDown(e, i.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  nudge(i.id, e.key === 'ArrowUp' ? -1 : 1);
+                                }
+                              }}
+                            >
+                              <svg width="12" height="16" viewBox="0 0 12 16" aria-hidden="true">
+                                <g fill="currentColor">
+                                  {[3, 8, 13].map((cy) =>
+                                    [3, 9].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.35" />),
+                                  )}
+                                </g>
+                              </svg>
+                            </button>
+                            <span className="item-cat">
+                              <Icon d={CATS[i.cat].icon} size={15} />
+                            </span>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <span className="item-title">{i.title}</span>
+                                {i.time && (
+                                  <span className="subtle num" style={{ fontSize: 11 }}>
+                                    {i.time}
+                                  </span>
+                                )}
+                              </div>
+                              {i.note && <div className="item-note">{i.note}</div>}
+                              <div className="item-by">
+                                <span className="chip">{initial(i.by)}</span>
+                                {i.from ? `${i.by} · from ${i.from}` : i.by}
+                              </div>
+                            </div>
+                            <div className="item-right">
+                              <span className="item-cost">{fmt2(i.cost)}</span>
+                              <div className="item-acts">
+                                <button
+                                  type="button"
+                                  className="btn btn-ghost btn-sm"
+                                  title="Copy to another plan"
+                                  onClick={() => ui.openPanel({ kind: 'copy', optId: opt.id, itemId: i.id })}
+                                >
+                                  <Icon name="copy" size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-ghost btn-sm"
+                                  title="Edit"
+                                  onClick={() => ui.openPanel({ kind: 'add', optId: opt.id, editId: i.id })}
+                                >
+                                  <Icon name="edit" size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-ghost btn-sm"
+                                  title="Remove"
+                                  onClick={() => removeItem(i)}
+                                  style={{ color: 'var(--critical-text)' }}
+                                >
+                                  <Icon name="trash" size={13} />
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="item-right">
-                          <span className="item-cost">{fmt2(i.cost)}</span>
-                          <div className="item-acts">
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              title="Copy to another plan"
-                              onClick={() => ui.openPanel({ kind: 'copy', optId: opt.id, itemId: i.id })}
-                            >
-                              <Icon name="copy" size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              title="Edit"
-                              onClick={() => ui.openPanel({ kind: 'add', optId: opt.id, editId: i.id })}
-                            >
-                              <Icon name="edit" size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              title="Remove"
-                              onClick={() => removeItem(i)}
-                              style={{ color: 'var(--critical-text)' }}
-                            >
-                              <Icon name="trash" size={13} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+
+                      {isTargetDay && drag.target!.index >= items.filter((i) => i.id !== drag.dragId).length && (
+                        <div className="drop-line" />
+                      )}
+
+                      {/* An empty day needs something to aim at. */}
+                      {drag.dragId && items.filter((i) => i.id !== drag.dragId).length === 0 && (
+                        <div className={`drop-zone${isTargetDay ? ' is-over' : ''}`}>Drop here</div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -214,6 +299,20 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
           )}
         </div>
       </section>
+
+      {/* the row travelling with the pointer */}
+      {drag.ghost && dragged && (
+        <div
+          className="drag-ghost"
+          style={{ left: drag.ghost.x, top: drag.ghost.y, width: drag.ghost.w, height: drag.ghost.h }}
+        >
+          <span className="item-cat">
+            <Icon d={CATS[dragged.cat].icon} size={15} />
+          </span>
+          <span className="item-title">{dragged.title}</span>
+          <span className="item-cost">{fmt2(dragged.cost)}</span>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s4)' }}>
         <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 'var(--s3)' }}>
@@ -246,7 +345,7 @@ export function ItineraryTab({ vac, opt, activeVac }: { vac: Vacation; opt: Opti
                   <div>
                     <div style={{ fontSize: 12, marginBottom: 3 }}>{CATS[k].label}</div>
                     <div style={{ height: 6, borderRadius: 3, background: 'var(--surface-3)', overflow: 'hidden' }}>
-                      <div style={{ width: `${(v / maxCat) * 100}%`, height: '100%', borderRadius: 3, background: 'var(--accent-500)' }} />
+                      <div style={{ width: `${(v / maxCat) * 100}%`, height: '100%', borderRadius: 3, background: 'var(--teal)' }} />
                     </div>
                   </div>
                   <span className="num" style={{ fontSize: 12, fontWeight: 600 }}>

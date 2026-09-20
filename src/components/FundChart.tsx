@@ -124,10 +124,10 @@ export function FundChart({ months, tripCost }: Props) {
 
           {/* the fund, split at zero so a shortfall reads as a shortfall */}
           <path d={geo.area} fill="var(--series-wash)" clipPath={`url(#pos-${uid})`} />
-          {hasNegative && <path d={geo.area} fill="rgba(208,59,59,0.12)" clipPath={`url(#neg-${uid})`} />}
+          {hasNegative && <path d={geo.area} fill="var(--series-negative-wash)" clipPath={`url(#neg-${uid})`} />}
           <path d={geo.line} fill="none" stroke="var(--series)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" clipPath={`url(#pos-${uid})`} />
           {hasNegative && (
-            <path d={geo.line} fill="none" stroke="var(--critical)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" clipPath={`url(#neg-${uid})`} />
+            <path d={geo.line} fill="none" stroke="var(--series-negative)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" clipPath={`url(#neg-${uid})`} />
           )}
 
           {/* zero baseline */}
@@ -138,7 +138,7 @@ export function FundChart({ months, tripCost }: Props) {
             p.m.trip ? (
               <g key={p.m.key}>
                 <line x1={p.x} x2={p.x} y1={PAD.t - 8} y2={p.y} stroke="var(--accent-400)" strokeWidth="1" strokeDasharray="3 3" />
-                <circle cx={p.x} cy={p.y} r="5" fill={p.m.bal < 0 ? 'var(--critical)' : 'var(--series)'} stroke="var(--surface)" strokeWidth="2" />
+                <circle cx={p.x} cy={p.y} r="5" fill={p.m.bal < 0 ? 'var(--series-negative)' : 'var(--series)'} stroke="var(--surface)" strokeWidth="2" />
                 <text x={p.x} y={PAD.t - 14} textAnchor="middle" fontSize="11" fontWeight="600" fill="var(--text-2)">
                   {p.m.trip.name}
                 </text>
@@ -167,7 +167,7 @@ export function FundChart({ months, tripCost }: Props) {
           {active && (
             <g pointerEvents="none">
               <line x1={active.x} x2={active.x} y1={PAD.t - 8} y2={H - PAD.b} stroke="var(--border-strong)" strokeWidth="1" />
-              <circle cx={active.x} cy={active.y} r="5" fill="var(--surface)" stroke={active.m.bal < 0 ? 'var(--critical)' : 'var(--series)'} strokeWidth="2.5" />
+              <circle cx={active.x} cy={active.y} r="5" fill="var(--surface)" stroke={active.m.bal < 0 ? 'var(--series-negative)' : 'var(--series)'} strokeWidth="2.5" />
             </g>
           )}
 

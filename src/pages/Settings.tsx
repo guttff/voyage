@@ -1,6 +1,7 @@
 import { Icon } from '../components/Icon';
 import { ImageSlot } from '../components/ImageSlot';
 import { useToast } from '../components/ui/Toast';
+import { normalizeData } from '../lib/order';
 import { seed } from '../lib/seed';
 import { useStore } from '../state/store';
 import { useUi } from '../state/ui';
@@ -37,14 +38,14 @@ export function Settings() {
       try {
         const j = JSON.parse(String(r.result)) as Backup;
         if (j.schema !== 'voyage.backup.v1' || !Array.isArray(j.vacations)) throw new Error('not a Voyage backup');
-        replaceData({
+        replaceData(normalizeData({
           people: j.people || data.people,
           user: (j.people || data.people)[0]?.id || 'p1',
           vacations: j.vacations,
           budget: j.budget || data.budget,
           duotone: data.duotone,
           activity: j.activity || [],
-        });
+        }));
         if (j.images) restoreImages(j.images);
         ui.resetRoute(j.vacations[0]?.id);
         toast(`Restored ${j.vacations.length} trips`, 'good');
@@ -64,7 +65,7 @@ export function Settings() {
         body: 'Your trips, options and contribution rules in this browser are replaced with the demo set. Traveler photos are kept.',
         label: 'Reset',
         go: () => {
-          const d = seed();
+          const d = normalizeData(seed());
           replaceData(d);
           // Covers belong to trips that no longer exist; avatars survive.
           const keep = Object.fromEntries(

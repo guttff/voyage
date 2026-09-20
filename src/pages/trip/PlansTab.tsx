@@ -102,7 +102,7 @@ export function PlansTab({ vac, activeVac }: { vac: Vacation; activeVac: ActiveV
                     width: `${(t / biggest) * 100}%`,
                     height: '100%',
                     borderRadius: 3,
-                    background: op.final ? 'var(--accent-700)' : 'var(--accent-400)',
+                    background: op.final ? 'var(--teal-deep)' : 'var(--teal)',
                   }}
                 />
               </div>
@@ -151,7 +151,7 @@ export function PlansTab({ vac, activeVac }: { vac: Vacation; activeVac: ActiveV
                     height: 6,
                     flex: 'none',
                     borderRadius: '50%',
-                    background: 'var(--accent-500)',
+                    background: 'var(--accent-600)',
                     transform: 'translateY(-1px)',
                   }}
                 />

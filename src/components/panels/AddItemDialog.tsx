@@ -4,6 +4,7 @@ import { Icon } from '../Icon';
 import { useToast } from '../ui/Toast';
 import { CATS, CAT_KEYS } from '../../lib/constants';
 import { addDays, dayLabel, diffDays, uid } from '../../lib/format';
+import { placeInDay } from '../../lib/order';
 import { useStore } from '../../state/store';
 import { useUi } from '../../state/ui';
 import type { CatKey, ItemForm, Vacation } from '../../lib/types';
@@ -55,14 +56,18 @@ export function AddItemDialog({ vac, optId, editId, date }: Props) {
       cost: Number(form.cost) || 0,
     };
     if (editing) {
-      updOpt(vac.id, opt.id, (x) => ({
-        ...x,
-        items: x.items.map((i) => (i.id === editing.id ? { ...i, ...base } : i)),
-      }));
+      const movedDay = editing.date !== base.date;
+      updOpt(vac.id, opt.id, (x) => {
+        const items = x.items.map((i) => (i.id === editing.id ? { ...i, ...base } : i));
+        if (!movedDay) return { ...x, items };
+        const next = items.find((i) => i.id === editing.id)!;
+        return { ...x, items: placeInDay(items, next, base.date, 'byTime') };
+      });
       log(`${me.name} edited “${base.title}” in ${opt.name}`);
       toast(`Saved “${base.title}”`, 'good');
     } else {
-      updOpt(vac.id, opt.id, (x) => ({ ...x, items: [...x.items, { id: uid(), by: me.name, ...base }] }));
+      const fresh = { id: uid(), by: me.name, ...base };
+      updOpt(vac.id, opt.id, (x) => ({ ...x, items: placeInDay(x.items, fresh, base.date, 'byTime') }));
       log(`${me.name} added “${base.title}” to ${opt.name}`);
       toast(`Added “${base.title}” to ${opt.name}`, 'good');
     }

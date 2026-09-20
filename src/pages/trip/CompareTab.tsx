@@ -3,6 +3,7 @@ import { Badge } from '../../components/ui/Badge';
 import { useToast } from '../../components/ui/Toast';
 import { CATS, total } from '../../lib/constants';
 import { addDays, dayLabel, diffDays, fmt, short, uid } from '../../lib/format';
+import { placeInDay } from '../../lib/order';
 import { useStore } from '../../state/store';
 import type { Item, Vacation } from '../../lib/types';
 
@@ -16,7 +17,8 @@ export function CompareTab({ vac }: { vac: Vacation }) {
   const inFinal = (i: Item) => finalItems.some((f) => f.title === i.title && f.date === i.date);
 
   const toFinal = (i: Item, fromName: string) => {
-    updOpt(vac.id, 'final', (f) => ({ ...f, items: [...f.items, { ...i, id: uid(), from: fromName }] }));
+    const copy = { ...i, id: uid(), from: fromName };
+    updOpt(vac.id, 'final', (f) => ({ ...f, items: placeInDay(f.items, copy, copy.date, 'byTime') }));
     log(`${me.name} copied “${i.title}” to Final`);
     toast(`“${i.title}” added to Final`, 'good');
   };

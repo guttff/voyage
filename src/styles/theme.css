@@ -1,66 +1,101 @@
 /* ─────────────────────────────────────────────────────────────────────────
    Voyage — design tokens.
 
-   The steel-blue accent ramp is carried over from the Industry design system
-   the app was prototyped in; everything around it (surfaces, elevation, radii,
-   status colours) is rebuilt for a production application rather than a
-   wireframe. Every text colour below clears 4.5:1 on the surface it is used
-   on; mark-only colours clear 3:1 and are always paired with a label.
+   Navy carries navigation and structure, the workspace is near-white, Primary
+   Blue is every action and active state, and teal/mint mean money, progress
+   and things that went well.
+
+   Contrast is measured against the workspace (#F8FAFC), not assumed. Several
+   palette colours are vivid but light — Sky Blue 2.24:1, Teal 2.38, Gray 2.45,
+   Success 2.42, Warning 2.05, Sunset 2.68, Error 3.60, Info 4.05 — so they are
+   used as fills, marks, borders and chart ink, and each has a darker sibling
+   (`-text`) for when the same meaning has to be carried by words. Every token
+   below ending in `text` clears 4.5:1.
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
   /* — surfaces — */
-  --bg: #f4f6f8;            /* app plane */
+  --bg: #f8fafc;            /* workspace */
   --surface: #ffffff;       /* cards, tables, dialogs */
-  --surface-2: #f7f9fb;     /* table headers, subtle fills */
-  --surface-3: #eef2f6;     /* hover wash, inset panels */
-  --surface-inset: #f1f4f7;
+  --surface-2: #f1f5f9;     /* table headers, subtle fills */
+  --surface-3: #e8eef5;     /* hover wash */
+  --surface-inset: #f1f5f9;
 
   /* — lines — */
-  --border: #e2e8ee;        /* hairline */
-  --border-strong: #cbd5e0; /* input borders, dividers that must read */
+  --border: #e2e8f0;        /* Light Gray */
+  --border-strong: #cbd5e1;
+  --gray: #94a3b8;          /* Gray — rules, axes, disabled. Never text. */
 
   /* — ink — */
-  --text: #16202b;
-  --text-2: #5a6a7a;        /* 5.56:1 — secondary copy */
-  --text-3: #67737f;        /* 4.62:1 — labels, captions */
+  --text: #1f2937;          /* Charcoal — 14.03:1 */
+  --text-2: #475569;        /* Slate — 7.24:1 */
+  --text-3: #64748b;        /* 4.55:1. Gray itself is 2.45 and fails here. */
   --text-inverse: #ffffff;
 
-  /* — brand: steel blue, from the original design system — */
-  --accent-50: #f4f8fc;
-  --accent-100: #eef6ff;
-  --accent-200: #d6ebff;
-  --accent-300: #b5d9fd;
-  --accent-400: #94bce3;
-  --accent-500: #749dc4;
-  --accent-600: #597ea3;
-  --accent-700: #416180;    /* 6.47:1 — the interactive colour */
-  --accent-800: #2c455d;
-  --accent-900: #16232f;    /* the rail */
+  /* — brand: Primary Blue up to Navy — */
+  --accent-50: #f4f9ff;
+  --accent-100: #e6f7ff;    /* Light Blue */
+  --accent-200: #cceaff;
+  --accent-300: #7fd4ff;
+  --accent-400: #38bdf8;    /* sky gradient, end */
+  --accent-500: #0ea5e9;    /* sky gradient, start */
+  --accent-600: #0c6fe0;
+  --accent-700: #0b5ed7;    /* Primary Blue — 5.58:1, the interactive colour */
+  --accent-800: #0a4aab;
+  --accent-900: #0a2540;    /* Navy — 14.85:1 */
   --accent: var(--accent-700);
+
+  --sky-1: #0ea5e9;
+  --sky-2: #38bdf8;
+  --sky-gradient: linear-gradient(135deg, var(--sky-1), var(--sky-2));
+  --sky-blue: #00b4ff;
+
+  /* — money, progress, things that went well — */
+  --teal: #14b8a6;          /* mark/fill */
+  --teal-deep: #0d9488;
+  --teal-text: #0f766e;     /* 5.23:1 */
+  --mint: #a7f3d0;
+
+  /* — warm accents, used sparingly — */
+  --sunset: #f97316;
+  --sand: #fde68a;
 
   /* — status. Never used alone: always with a label, and an icon where the
        colour is the whole message. — */
-  --good: #0ca30c;          /* mark */
-  --good-text: #006300;     /* 7.54:1 */
-  --good-bg: #e8f6e8;
-  --good-border: #b9e3b9;
+  --good: #10b981;          /* Success */
+  --good-text: #047857;     /* 5.24:1 */
+  --good-bg: #ecfdf5;
+  --good-border: #a7f3d0;   /* Mint */
 
-  --warn: #fab219;          /* mark — 1.83:1, label-relieved */
-  --warn-text: #8a5a00;     /* 5.93:1 */
-  --warn-bg: #fdf4e3;
-  --warn-border: #f2ddb0;
+  --warn: #f59e0b;          /* Warning */
+  --warn-text: #b45309;     /* 4.80:1 */
+  --warn-bg: #fffbeb;
+  --warn-border: #fde68a;   /* Sand */
 
-  --critical: #d03b3b;      /* 4.80:1 — reads as text or mark */
-  --critical-text: #b3261e;
-  --critical-bg: #fdeceb;
-  --critical-border: #f4c4c1;
+  --critical: #ef4444;      /* Error */
+  --critical-text: #b91c1c; /* 6.18:1 */
+  --critical-bg: #fef2f2;
+  --critical-border: #fecaca;
 
-  /* — data — */
-  --series: #2a78d6;        /* 4.42:1 — the fund line */
-  --series-wash: rgba(42, 120, 214, 0.10);
-  --grid: #e8edf2;
-  --axis: #cbd5e0;
+  --info: #8b5cf6;          /* Info */
+  --info-text: #6d28d9;     /* 6.79:1 */
+  --info-bg: #f5f3ff;
+
+  /* — data. The fund is money, so it is teal; the line is the deep step so it
+       stays legible as a 2px mark. — */
+  --series: #0f766e;
+  --series-wash: rgba(20, 184, 166, 0.13);
+  --series-negative: #ef4444;
+  --series-negative-wash: rgba(239, 68, 68, 0.12);
+  --grid: #e9eef4;
+  --axis: #cbd5e1;
+
+  /* — rail (navy) — */
+  --rail-bg: #0a2540;
+  --rail-text: #cbd5e1;
+  --rail-dim: #8aa0b8;
+  --rail-hover: rgba(255, 255, 255, 0.07);
+  --rail-active: rgba(255, 255, 255, 0.12);
 
   /* — type — */
   --font: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -83,9 +118,9 @@
   --r-pill: 999px;
 
   /* — elevation — */
-  --sh-sm: 0 1px 2px rgba(22, 32, 43, 0.06);
-  --sh-md: 0 2px 4px rgba(22, 32, 43, 0.06), 0 4px 12px rgba(22, 32, 43, 0.08);
-  --sh-lg: 0 8px 28px rgba(22, 32, 43, 0.16);
+  --sh-sm: 0 1px 2px rgba(10, 37, 64, 0.06);
+  --sh-md: 0 2px 4px rgba(10, 37, 64, 0.06), 0 4px 12px rgba(10, 37, 64, 0.08);
+  --sh-lg: 0 8px 28px rgba(10, 37, 64, 0.18);
 
   --rail-w: 248px;
   --topbar-h: 56px;

@@ -29,11 +29,11 @@ img { display: block; max-width: 100%; }
 
 :focus { outline: none; }
 :focus-visible {
-  outline: 2px solid var(--series);
+  outline: 2px solid var(--accent-700);
   outline-offset: 2px;
   border-radius: var(--r-sm);
 }
-::selection { background: color-mix(in srgb, var(--series) 22%, transparent); }
+::selection { background: color-mix(in srgb, var(--accent-500) 25%, transparent); }
 
 .muted { color: var(--text-2); }
 .subtle { color: var(--text-3); }
@@ -124,15 +124,15 @@ img { display: block; max-width: 100%; }
   transition: border-color .12s, box-shadow .12s;
 }
 .input::placeholder { color: var(--text-3); }
-.input:hover { border-color: #b3c0cd; }
+.input:hover { border-color: var(--gray); }
 .input:focus-visible {
   outline: none;
-  border-color: var(--series);
-  box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.15);
+  border-color: var(--accent-700);
+  box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.16);
 }
 .input:read-only { background: var(--surface-2); color: var(--text-2); }
 textarea.input { min-height: 84px; resize: vertical; line-height: 1.5; }
-select.input { appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2367737f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+select.input { appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
 
 .input-lg { min-height: 42px; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
@@ -198,7 +198,7 @@ select.input { appearance: none; padding-right: 30px; background-image: url("dat
 }
 .card-hd h3 { font-size: 14px; font-weight: 600; }
 .card-bd { padding: var(--s4); }
-.card-accent { background: var(--accent-50); border-color: #d9e6f2; }
+.card-accent { background: var(--accent-100); border-color: #c7e9fb; }
 
 .stat-value {
   font-size: 26px;
@@ -227,7 +227,7 @@ select.input { appearance: none; padding-right: 30px; background-image: url("dat
 .badge-warn { color: var(--warn-text); background: var(--warn-bg); border-color: var(--warn-border); }
 .badge-critical { color: var(--critical-text); background: var(--critical-bg); border-color: var(--critical-border); }
 .badge-neutral { color: var(--text-2); background: var(--surface-3); border-color: var(--border); }
-.badge-accent { color: var(--accent-800); background: var(--accent-100); border-color: #cfe2f5; }
+.badge-accent { color: var(--accent-800); background: var(--accent-100); border-color: #b8e4fb; }
 .badge-sm { font-size: 11px; padding: 1px 7px; line-height: 16px; }
 
 /* ── tables ──────────────────────────────────────────────────────────── */
@@ -263,7 +263,7 @@ select.input { appearance: none; padding-right: 30px; background-image: url("dat
   display: grid;
   place-items: center;
   padding: var(--s4);
-  background: rgba(22, 32, 43, 0.45);
+  background: rgba(10, 37, 64, 0.5);
   backdrop-filter: blur(2px);
   animation: fade .12s ease-out;
 }
@@ -317,13 +317,13 @@ select.input { appearance: none; padding-right: 30px; background-image: url("dat
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent-600);
+  border-left: 3px solid var(--accent-700);
   border-radius: var(--r-md);
   box-shadow: var(--sh-md);
   pointer-events: auto;
   animation: slide .16s ease-out;
 }
-.toast-good { border-left-color: var(--good); }
+.toast-good { border-left-color: var(--teal); }
 .toast-critical { border-left-color: var(--critical); }
 .toast svg { flex: none; margin-top: 2px; }
 @keyframes slide { from { opacity: 0; transform: translateX(10px) } }

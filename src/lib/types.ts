@@ -20,6 +20,8 @@ export type Item = {
   by: string;
   /** Set on copies: the name of the option the item came from. */
   from?: string;
+  /** Position within its day. Seeded from `time`; a drag sets it outright. */
+  order?: number;
 };
 
 export type Option = {

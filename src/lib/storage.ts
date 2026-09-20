@@ -1,4 +1,5 @@
 import { STORAGE_KEY } from './constants';
+import { normalizeData } from './order';
 import { seed } from './seed';
 import type { AppData } from './types';
 
@@ -11,20 +12,20 @@ export function loadData(): AppData {
       const s = JSON.parse(raw) as Partial<AppData>;
       if (s && Array.isArray(s.vacations)) {
         const base = seed();
-        return {
+        return normalizeData({
           people: s.people?.length ? s.people : base.people,
           user: s.user || base.user,
           vacations: s.vacations,
           budget: s.budget || base.budget,
           duotone: s.duotone ?? true,
           activity: s.activity || [],
-        };
+        });
       }
     }
   } catch {
     /* corrupt or blocked storage — fall through to the sample set */
   }
-  return seed();
+  return normalizeData(seed());
 }
 
 export function saveData(d: AppData) {

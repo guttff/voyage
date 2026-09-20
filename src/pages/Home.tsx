@@ -181,7 +181,7 @@ export function Home() {
                     height: 6,
                     flex: 'none',
                     borderRadius: '50%',
-                    background: 'var(--accent-500)',
+                    background: 'var(--accent-600)',
                     transform: 'translateY(-1px)',
                   }}
                 />
@@ -202,7 +202,7 @@ export function Home() {
 function Meter({ pct, tone }: { pct: number; tone: 'good' | 'critical' | 'neutral' }) {
   return (
     <div
-      style={{ height: 8, borderRadius: 4, background: 'var(--accent-100)', overflow: 'hidden' }}
+      style={{ height: 8, borderRadius: 4, background: 'var(--surface-3)', overflow: 'hidden' }}
       role="progressbar"
       aria-valuenow={Math.round(pct * 100)}
       aria-valuemin={0}
@@ -213,7 +213,7 @@ function Meter({ pct, tone }: { pct: number; tone: 'good' | 'critical' | 'neutra
           width: `${Math.max(2, pct * 100)}%`,
           height: '100%',
           borderRadius: 4,
-          background: tone === 'critical' ? 'var(--critical)' : 'var(--accent-600)',
+          background: tone === 'critical' ? 'var(--critical)' : 'var(--teal)',
           transition: 'width .3s',
         }}
       />

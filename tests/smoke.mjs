@@ -125,6 +125,83 @@ await step('add an item, with a toast', async () => {
   if (!(await page.textContent('body')).includes('$64.50')) throw new Error('cost not shown');
 });
 
+/* ── drag to reorder ───────────────────────────────────────────────────── */
+
+const dayText = async (n) => (await page.locator('.day').nth(n - 1).innerText());
+
+const dayOf = async (title) => {
+  const n = await page.locator('.day').count();
+  for (let i = 0; i < n; i++) if ((await dayText(i + 1)).includes(title)) return i + 1;
+  return 0;
+};
+
+/**
+ * `aim` returns the drop point, measured after the target has been scrolled
+ * into view. The coordinate must stay inside the viewport: near an edge the app
+ * auto-scrolls, which is correct for a person watching the page move but makes
+ * a fixed test coordinate point at whatever ends up there.
+ */
+const dragItem = async (title, aim) => {
+  // aim() scrolls the destination into view and returns the drop point; both
+  // measurements have to happen after that scroll settles.
+  const to = await aim();
+  const g = await page.locator('.item', { hasText: title }).first().locator('.grip').boundingBox();
+  if (!g) throw new Error(`"${title}" is off-screen after scrolling to the target`);
+  if (to < 100 || to > 900) throw new Error(`drop point ${to.toFixed(0)} is in the auto-scroll zone`);
+  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2 + 8, { steps: 3 });
+  await page.waitForSelector('.drag-ghost');
+  await page.mouse.move(g.x + g.width / 2, to, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+};
+
+await step('dragging an item moves it to another day', async () => {
+  const from = await dayOf('Surf lesson');
+  if (from !== 2) throw new Error('unexpected starting day: ' + from);
+  await dragItem('Surf lesson', async () => {
+    await page.locator('.day').nth(3).scrollIntoViewIfNeeded();
+    await page.waitForTimeout(150);
+    const d4 = await page.locator('.day').nth(3).boundingBox();
+    return d4.y + d4.height - 12;
+  });
+  const to = await dayOf('Surf lesson');
+  if (to === 2) throw new Error('still on day 2');
+  if (to !== 4) throw new Error('landed on day ' + to + ', expected 4');
+});
+
+await step('the move survives a reload', async () => {
+  await page.reload({ waitUntil: 'networkidle' });
+  await openTrip('Costa Rica');
+  await page.click('.tab:has-text("Itinerary")');
+  await page.locator('button', { hasText: /^Option 1/ }).first().click();
+  await page.waitForSelector('.day');
+  if (!(await dayText(4)).includes('Surf lesson')) throw new Error('move not persisted');
+});
+
+await step('dragging reorders within a day', async () => {
+  const before = await dayText(1);
+  if (before.indexOf('Flight FLL') > before.indexOf('Hotel Capitán')) throw new Error('unexpected starting order');
+  // Aim above the midpoint of the first row, which is the insertion gap at the
+  // very top of the day.
+  await dragItem('Hotel Capitán', async () => {
+    const f = await page.locator('.item', { hasText: 'Flight FLL' }).first().boundingBox();
+    return f.y + 4;
+  });
+  const after = await dayText(1);
+  if (after.indexOf('Hotel Capitán') > after.indexOf('Flight FLL')) throw new Error('hotel did not move to the top');
+});
+
+await step('the grip moves an item with the keyboard', async () => {
+  const before = await dayText(1);
+  await page.locator('.item', { hasText: 'Hotel Capitán' }).first().locator('.grip').focus();
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(150);
+  const after = await dayText(1);
+  if (before === after) throw new Error('ArrowDown did nothing');
+});
+
 await step('copy it into Final and keep provenance', async () => {
   const row = page.locator('.item', { hasText: 'Coffee farm tour' }).first();
   await row.hover();

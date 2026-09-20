@@ -2,6 +2,7 @@ import { Dialog } from '../Dialog';
 import { Icon } from '../Icon';
 import { useToast } from '../ui/Toast';
 import { dayLabel, fmt2, uid } from '../../lib/format';
+import { placeInDay } from '../../lib/order';
 import { useStore } from '../../state/store';
 import { useUi } from '../../state/ui';
 import type { Vacation } from '../../lib/types';
@@ -42,7 +43,8 @@ export function CopyItemDialog({ vac, optId, itemId }: { vac: Vacation; optId: s
             className="btn"
             disabled={exists}
             onClick={() => {
-              updOpt(vac.id, option.id, (x) => ({ ...x, items: [...x.items, { ...item, id: uid(), from: src.name }] }));
+              const copy = { ...item, id: uid(), from: src.name };
+              updOpt(vac.id, option.id, (x) => ({ ...x, items: placeInDay(x.items, copy, copy.date, 'byTime') }));
               log(`${me.name} copied “${item.title}” to ${option.name}`);
               toast(`Copied to ${option.name}`, 'good');
             }}

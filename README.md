@@ -21,10 +21,10 @@ npm run preview    # serve the build on :4173
 npm test           # browser smoke test — needs a running preview on :4173
 ```
 
-`npm test` drives a real Chromium through 32 flows — add/copy/import/export,
-the budget projection, photos, persistence, plus layout regressions (photo
-layers must not collapse, the compare header must not offset, no horizontal
-overflow at 1440 or 420). It needs Playwright's browser; in a sandbox that
+`npm test` drives a real Chromium through 36 flows — add/copy/import/export,
+drag-to-reorder, the budget projection, photos, persistence, plus layout
+regressions (photo layers must not collapse, the compare header must not
+offset, no horizontal overflow at 1440 or 420). It needs Playwright's browser; in a sandbox that
 already has one, point at it with `PLAYWRIGHT_EXECUTABLE=/path/to/chrome`.
 
 ## Deploying
@@ -44,6 +44,14 @@ options at will; delete any but Final.
 **Itinerary** — a per-day timeline for the selected plan. Every item carries a
 category, optional time, note, cost, and who added it. Items copied from another
 option keep a trail (“Sarah · from Option 2”).
+
+Drag an item by its grip to move it to another day or reorder it within one.
+Items carry an explicit position, seeded from their time — so existing plans and
+imports read exactly as before, a new item still lands at its time slot, and
+after that the order is yours. Dragging is pointer-based rather than HTML5
+drag-and-drop so it works on a phone, and because no drag is reachable by
+keyboard the grip also takes ArrowUp/ArrowDown (the edit dialog can set the day
+outright).
 
 **Compare** — every option side by side, aligned by day, with one-click *→ Final*
 and an *in Final* badge on anything already merged.
@@ -70,25 +78,28 @@ photos), restore, and reset to the sample set.
 
 React 18 + TypeScript + Vite, no UI framework.
 
-The design prototype used a blueprint/wireframe language — corner registration
-marks, transparent cards, square corners — which reads as a mockup. The app
-keeps that palette's steel-blue accent ramp and Barlow type, and rebuilds
-everything else as a production interface:
+Navy carries navigation and structure, the workspace is near-white, Primary Blue
+is every action and active state, and teal/mint mean money, progress and things
+that went well.
 
-- `src/styles/theme.css` — tokens. Every text colour clears 4.5:1 on the
-  surface it sits on; mark-only colours clear 3:1 and always carry a label.
+- `src/styles/theme.css` — tokens. Contrast is measured against the workspace,
+  not assumed: Sky Blue, Teal, Gray, Success, Warning, Sunset, Error and Info
+  are all vivid but light (2.0–4.1:1), so they are used as fills, marks, borders
+  and chart ink, and each has a darker `-text` sibling for when the same meaning
+  has to be carried by words. Every `-text` token clears 4.5:1.
 - `src/styles/components.css` — buttons, inputs, cards, tables, badges,
   dialogs, toasts, tabs.
 - `src/styles/app.css` — the shell (rail, topbar, content) and feature styles.
 
-Status is semantic rather than decorative: a trip is **Covered** (green) or
-**Short** (red), and the colour never carries the meaning alone — every badge
-has text, and the ones that fail contrast as a mark also carry an icon.
+Status is semantic rather than decorative: a trip is **Covered** or **Short**,
+and the colour never carries the meaning alone — every badge has text, and the
+ones that fail contrast as a mark also carry an icon.
 
 The 12-month projection is a single-series trend, so it is drawn as a line and
 area with a real zero baseline (the whole question is whether the fund ever goes
 under it), trip annotations instead of a value on every point, a hover
-crosshair, and a table view for anyone who can't use the chart.
+crosshair, and a table view for anyone who can't use the chart. It is drawn in
+teal, because the fund is money.
 
 ```
 src/
@@ -96,6 +107,7 @@ src/
     budget.ts     the fund simulation (contributions vs trips, month by month)
     importExport.ts  the JSON schema in both directions
     format.ts     money + local-date helpers
+    order.ts      item position within a day, seeded from time
     seed.ts       the sample data the design was drawn around
     storage.ts    localStorage (model) + IndexedDB (photos)
   state/        store (data) and ui (route, panels) contexts, derive.ts view models

@@ -3,6 +3,7 @@ import { Icon } from '../../components/Icon';
 import { useToast } from '../../components/ui/Toast';
 import { short, slug, uid } from '../../lib/format';
 import { chatPrompt, parseImport, toOptionJson } from '../../lib/importExport';
+import { appendItems, withOrders } from '../../lib/order';
 import { useStore } from '../../state/store';
 import { IMPORT_HINT, useUi } from '../../state/ui';
 import type { Vacation } from '../../lib/types';
@@ -48,7 +49,7 @@ export function IoTab({ vac }: { vac: Vacation }) {
       const name = imp.name || 'Option ' + vac.options.length;
       updVac(vac.id, (x) => ({
         ...x,
-        options: [...x.options, { id: target, name, author: imp.author, items: imp.items }],
+        options: [...x.options, { id: target, name, author: imp.author, items: withOrders(imp.items) }],
       }));
       log(`${me.name} imported ${imp.count} items as ${name}`);
       toast(`Imported ${imp.count} items as ${name}`, 'good');
@@ -57,7 +58,7 @@ export function IoTab({ vac }: { vac: Vacation }) {
       // Merged-in items keep a trail back to where they came from.
       updOpt(vac.id, target, (x) => ({
         ...x,
-        items: [...x.items, ...imp.items.map((i) => ({ ...i, from: imp.name || 'import' }))],
+        items: appendItems(x.items, imp.items.map((i) => ({ ...i, from: imp.name || 'import' }))),
       }));
       const into = vac.options.find((x) => x.id === target)?.name;
       log(`${me.name} imported ${imp.count} items into ${into}`);

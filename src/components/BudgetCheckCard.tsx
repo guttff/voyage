@@ -29,7 +29,7 @@ export function BudgetCheckCard({ vac, withVerdict = false }: { vac: ActiveVac; 
               <td style={{ fontWeight: 600 }}>Left after trip</td>
               <td
                 className="n"
-                style={{ fontWeight: 700, color: vac.tone === 'critical' ? 'var(--critical-text)' : 'var(--good-text)' }}
+                style={{ fontWeight: 700, color: vac.tone === 'critical' ? 'var(--critical-text)' : 'var(--teal-text)' }}
               >
                 {vac.balanceAfter}
               </td>
