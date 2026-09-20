@@ -30,7 +30,6 @@ export const NAV_ICONS: Record<string, string> = {
 export const PEOPLE_ICON =
   'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 1 0 0-8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8';
 export const CHECK_ICON = 'M20 6 9 17l-5-5';
-export const COMPASS_ICON = 'm16.2 7.8-2 6.3-6.4 2.1 2-6.3z';
 export const IMPORT_ICON = 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3';
 export const EXPORT_ICON = 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12';
 

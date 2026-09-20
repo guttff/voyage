@@ -39,7 +39,7 @@ export function Sidebar() {
     <aside className="rail">
       <div className="rail-brand">
         <span className="rail-mark">
-          <Icon name="compass" size={18} />
+          <Icon name="palm" size={19} width={1.7} />
         </span>
         <span>
           <span className="rail-name">Voyage</span>
